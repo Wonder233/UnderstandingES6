@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+</body>
+<script>
+    /**
+     * 1. 一个 Promise 就是一个代表了异步操作最终完成或者失败的对象.
+     *
+     * 本质上，一个 promise 是某个函数返回的对象，
+     * 可以把回调函数绑定在这个对象上，而不是把回调函数当作参数传进函数。
+     */
+
+    // promise 替代了下面这种旧式的函数，
+    // 这种旧式函数需要两个回调函数，并最终调用处理成功事件或者处理失败事件的回调函数：
+    function doSomething(success,failure){
+        //做点什么
+    }
+    function successCallback(result) {
+        console.log("It succeeded with " + result);
+    }
+    function failureCallback(error) {
+        console.log("It failed with " + error);
+    }
+
+    doSomething(successCallback, failureCallback);
+
+    // 新式函数返回一个你可以直接绑定回调函数的promise对象，来代替旧式的函数形式：
+    let promise = doSomething();
+    promise.then(successCallback, failureCallback);
+    //或者更简单的形式：异步函数调用
+    doSomething().then(successCallback, failureCallback);
+
+    /**
+     * 2. Promise 会带来一些保证：
+     * （1）在 JavaScript 事件队列的当前运行完成之前，回调函数永远不会被调用。
+     * （2）通过 .then 形式添加的回调函数，甚至都在异步操作完成之后才被添加的函数，都会被调用。
+     * （3）通过多次调用 .then ，可以添加多个回调函数，他们会按照插入顺序独立运行。
+     */
+
+    //最直接的好处：链式调用
+
+
+
+</script>
+</html>

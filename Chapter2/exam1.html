@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <link href="../style.css" rel="stylesheet">
+    <script src="../tools.js"></script>
+</head>
+<body>
+<h1>字符串与正则表达式</h1>
+</body>
+<script>
+    group("1. 更好的 Unicode 支持");
+    /**
+     * 1.更好的 Unicode 支持
+     */
+
+    //在 ES5 中，所有字符串操作都基于 16 位码元，这表示在处理包含代理对的 UTF-16 字符时会出现预期外的结果
+    var text31 = "𠮷";
+    log("text31",text31);
+    log("text31.length",text31.length);           // 2
+    log("/^.$/.test(text31)",/^.$/.test(text31));      // false  ^.$ 表示匹配一个字符
+
+    //charAt() 方法无法返回一个有效的字符，因为这里每 16 位码点都不是一个可打印字符。
+    log("charAt(0)",text31.charAt(0));        // "乱码"
+    log("charAt(1)",text31.charAt(1));        // "乱码"
+    //charCodeAt() 方法同样无法正确识别该字符，它只能返回每个码元的 16 位数字
+    log("charCodeAt(0)",text31.charCodeAt(0));    // 55362
+    log("charCodeAt(1)",text31.charCodeAt(1));    // 57271
+
+    //ES6 则是强制执行 UTF-16 字符编码以解决此类问题，从而让字符串操作标准化
+    _group("1.1 codePointAt()");
+    var text32 = "𠮷a";
+    log("text32",text32);
+
+    log("charCodeAt(0)",text32.charCodeAt(0));    // 55362
+    log("charCodeAt(1)",text32.charCodeAt(1));    // 57271
+    log("charCodeAt(2)",text32.charCodeAt(2));    // 97
+
+    log("codePointAt(0)",text32.codePointAt(0));   // 134071
+    log("codePointAt(1)",text32.codePointAt(1));   // 57271
+    log("codePointAt(2)",text32.codePointAt(2));   // 97
+    _groupEnd();
+
+    _group("1.2 判断字符包含了一个还是两个码元:");
+    function is32Bit(c) {
+        return c.codePointAt(0) > 0xFFFF;
+    }
+    log("is32Bit('𠮷')",is32Bit("𠮷"));        // true
+    log("is32Bit('a')",is32Bit("a"));          // false
+    _groupEnd();
+
+    _group("1.3 使用for...of循环，因为它会正确识别 32 位的 UTF-16 字符。");
+    let s = '𠮷a';
+    for (let ch of s) {
+        log(ch.codePointAt(0).toString(10));
+    }
+    _groupEnd();
+
+    _group("1.4 String.fromCodePoint() 方法");
+    /**
+     * String.fromCodePoint() 用给定的码点来产生包含单个字符的字符串。
+     *
+     * 注意，fromCodePoint方法定义在String对象上，而codePointAt方法定义在字符串的实例对象上。
+     */
+    log("String.fromCharCode(134071)",String.fromCharCode(134071));  // "ஷ"
+    log("String.fromCodePoint(134071)",String.fromCodePoint(134071));  // "𠮷"
+    _groupEnd();
+
+    _group("1.5 normalize() 方法");
+    /**
+     * 在排序或其它一些比较操作中，不同的字符可能会被认为是等同的。
+     * (1) 第一种是规范相等性（ canonical equivalence ），意味着两个码点序列在所有方面都被认为是可互换的。
+     *     例如，两个字符的组合可以按规范等同于另一个字符。
+     * (2) 第二种关联性是兼容性（ compatibility ），两个兼容的码点序列看起来有差别，但在特定条件下可互换使用。
+     */
+
+    /**
+     * normalize() :ES6 给字符串提供的支持 Unicode 标准形式的方法。
+     * @param: 单个可选的字符串参数，用于指示需要使用哪种 Unicode 标准形式。
+     *
+     * 当进行字符串比较时，必须将它们标准化为同一种形式。
+     *
+     * normalize方法目前不能识别三个或三个以上字符的合成。
+     */
+    log("'\u01D1' === '\u004F\u030C'", '\u01D1' === '\u004F\u030C'); //false
+    log("'\u01D1'.normalize() === '\u004F\u030C'.normalize()", '\u01D1'.normalize() === '\u004F\u030C'.normalize()); //true
+    __groupEnd();
+
+    _group("1.6 正则表达式 u 标志");
+    //正则表达式假定单个字符使用一个 16 位的码元来表示。
+    // 为了解决这个问题， ES6 为正则表达式定义了用于处理 Unicode 的 u 标志。
+
+    __group("1.6.1 u 标志实例")
+    //当一个正则表达式设置了 u 标志时，它的工作模式将切换到针对 字符 而非 码元。
+    var text3 = "𠮷";
+    log("text3",text3);
+    log("text3.length",text3.length);           // 2
+    log("/^.$/.test(text3)",/^.$/.test(text3));      // false
+    log("/^.$/u.test(text3)",/^.$/u.test(text3));     // true
+    __groupEnd();
+
+    __group("1.6.2 计算码点数量")
+    // ES6 并没有添加用于判断字符串包含多少个码点的方法，但借助 u 标志，可以使用正则表达式来进行计算
+    function codePointLength(text) {
+        var result = text.match(/[\s\S]/gu);
+        return result ? result.length : 0;
+    }
+    log("codePointLength('abc')",codePointLength("abc"));    // 3
+    log('codePointLength("𠮷bc")',codePointLength("𠮷bc"));   // 3
+
+    __groupEnd();
+
+    __group("1.6.3 判断是否支持 u 标志")
+    function hasRegExpU() {
+        try {
+            var pattern = new RegExp(".", "u");
+            return true;
+        } catch (ex) {
+            return false;
+        }
+    }
+    log("hasRegExpU()",hasRegExpU()); //true
+    __groupEnd();
+
+    _groupEnd();
+    groupEnd();
+
+    group("2. 字符串的其他改动");
+
+
+    groupEnd();
+</script>
+</html>
