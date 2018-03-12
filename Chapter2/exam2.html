@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>模板字面量</title>
+    <link href="../style.css" rel="stylesheet">
+    <script src="../tools.js"></script>
+</head>
+<body>
+<h1>模板字面量</h1>
+</body>
+<script>
+    group("4. 模板字面量");
+    /**
+     *  (1)ES6 的模板字面量（ template literal ）提供了创建领域专用语言的语法，
+     *     与 ES5 及更早版本的解决方案相比，处理内容可以更安全。
+     *  (2)领域专用语言（ domain-specific language ， DSL ）是被设计用于 特定有限 目的的编程语言，
+     *     与 JavaScript 这样通用目的语言相反。
+     *  (3)本方案通过语法糖扩展了 ECMAScript 的语法，允许语言库提供 DSL 以便生成、查询并操纵来自于其它
+     *     语言的内容，并且能够对 XSS 、 SQL 注入等注入攻击免疫，或具有抗性。
+     */
+
+    /**
+     * JS 语言直到 ES5 依然完全缺失如下功能，模板字面量是 ES6 针对这些功能的回应：
+     * (1)多行字符串：针对多行字符串的正式概念；
+     * (2)基本的字符串格式化：使用已存在的变量值，对字符串进行部分替换的能力；
+     * (3)HTML 转义：能转换字符串以便将其安全插入到 HTML 中的能力。
+     */
+    _group("4.1 基本语法");
+    //模板字面量的最简单语法，是使用反引号（ `  ）来包裹普通字符串，而不是用双引号或单引号。
+    let message1 = `Hello world!`;
+
+    log("message1:", message1);                     // "Hello world!"
+    log("length:", message1.length);               // 12
+    log("typeof message1:", typeof message1);       // "string"
+
+    // 在模板字面量中无需对双引号或单引号进行转义。
+    _groupEnd();
+
+    _group("4.2 多行字符串");
+    __group("ES6 之前的权宜之计");
+    //在换行之前使用反斜线（ \ ）
+    var message2 = "Multiline \
+string";
+    // message 字符串打印输出时不会有 换行，因为反斜线被视为行的续延符号，而非新行的符号。
+    log(message2);       // "Multiline string"
+    //为了在输出中显示换行，你需要手动加入它：
+    var message3 = "Multiline \n\
+string";
+    log(message3);       // "Multiline
+                         //  string"
+    __groupEnd();
+
+    __group("多行字符串的简单解决方法");
+    let message4 = `Multiline
+string`;
+    log(message4);           // "Multiline
+                            //  string"
+    log(message4.length);    // 16
+    
+    // 反引号之内的所有空白符都是字符串的一部分，因此需要留意缩进。
+    let message5 = `Multiline
+    string`;
+    log(message5);           // "Multiline
+                             //     string"
+    log(message5.length);    // 16
+
+    // 如果让多行文本保持合适的缩进对你来说很重要，可以将多行模板字面量的第一行空置，并在此后进行缩进。
+    let html = `
+<div>
+    <h1>Title</h1>
+</div>`.trim();
+    log(html);
+
+    __groupEnd();
+    _groupEnd();
+
+    _group("4.3 产生替换位");
+    // 替换位允许将任何有效的 JS 表达式嵌入到模板字面量中，并将其结果输出为字符串的一部分。
+    // 替换位由起始的 ${ 与结束的 } 来界定，之间允许放入任意的 JS 表达式。
+    let name1 = "Nicholas",
+            message6 = `Hello, ${name1}.`;
+    log(message6);       // "Hello, Nicholas."
+
+    // 可以嵌入计算、函数调用等等。
+    let count1 = 10,
+            price1 = 0.25,
+            message7 = `${count1} items cost $${(count1 * price1).toFixed(2)}.`;
+
+    log(message7);       // "10 items cost $2.50."
+
+    // 可以将模板字面量嵌入到另一个模板字面量内部。
+    let name2 = "Nicholas",
+            message8 = `Hello, ${
+                    `my name is ${ name2 }`
+                    }.`;
+
+    log(message8);        // "Hello, my name is Nicholas."
+
+    // 模板字面量能访问到作用域中 任意的可访问变量 。
+    // 试图使用未定义的变量会抛出错误，无论是否为严格模式。
+    _groupEnd();
+
+
+    _group("4.4 标签化模板");
+    /**
+     * 模板标签（ template tag ）能对模板字面量进行转换并返回最终的字符串值，
+     * 标签在模板的起始处被指定，即在第一个 `  之前
+     */
+    __group("4.4.1 定义标签")
+    /**
+     * 一个标签（ tag ）仅是单纯的函数，它被调用时接收需要处理的模板字面量数据。
+     * 标签所接收的数据被划分为独立片段，并且应当将它们组合起来以产生结果。
+     *
+     * function tag(literals, ...substitutions) {
+     *      //返回一个字符串
+     * }
+     * @param: literals - 数组，包含模板字符串中那些没有变量替换的部分，
+     *                     变量替换只发生在数组的第一个成员与第二个成员之间、第二个成员与第三个成员之间，以此类推
+     *          ...substitutions - 剩余参数形式，是每个替换位的解释值。
+     */
+
+    /**
+     * passthru()
+     * @param literals
+     * @param substitutions
+     * @returns {string}
+     */
+    function passthru(literals, ...substitutions) {
+        log(`passthru\`\${count2} items cost $\${(count2 * price2).toFixed(2)}\`.`);
+        log("passthru() literals:",literals)
+        log("passthru() substitutions:",substitutions)
+        let result = "";
+
+        // 仅使用 substitution 的元素数量来进行循环
+        for (let i = 0; i < substitutions.length; i++) {
+            result += literals[i];
+            result += substitutions[i];
+        }
+
+        // 添加最后一个字面量
+        result += literals[literals.length - 1];
+
+        return result;
+    }
+    let count2 = 10,
+            price2 = 0.25,
+            message9 = passthru`${count2} items cost $${(count2 * price2).toFixed(2)}.`;
+    log(message9)
+
+    __groupEnd();
+
+    __group("4.4.2 使用模板字面量中的原始值");
+    // 获取原始字符串值的最简单方式是使用内置的 String.raw() 标签。
+    let message10 = `Multiline\nstring`,
+            message11 = String.raw`Multiline\nstring`;
+
+    log(message10);          // "Multiline
+                                    //  string"
+    log(message11);          // "Multiline\nstring"
+
+    //用如下代码来模拟 String.raw()
+    function raw(literals, ...substitutions) {
+        log(`Multiline\nstring`);
+        log("raw() literals:",literals)
+        log("raw() substitutions:",substitutions)
+        let result = "";
+
+        // 仅使用 substitution 的元素数量来进行循环
+        for (let i = 0; i < substitutions.length; i++) {
+            result += literals.raw[i];      // 改为使用原始值
+            result += substitutions[i];
+        }
+
+        // 添加最后一个字面量
+        result += literals.raw[literals.length - 1];
+
+        return result;
+    }
+
+    let message12 = raw`Multiline\nstring`;
+
+    console.log(message12);           // "Multiline\nstring"
+    console.log(message12.length);    // 17
+    __groupEnd();
+
+    _groupEnd();
+
+    groupEnd();
+</script>
+</html>

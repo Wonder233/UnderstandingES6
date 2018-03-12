@@ -2,7 +2,7 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title></title>
+    <title>字符串与正则表达式</title>
     <link href="../style.css" rel="stylesheet">
     <script src="../tools.js"></script>
 </head>
@@ -83,6 +83,7 @@
      *
      * normalize方法目前不能识别三个或三个以上字符的合成。
      */
+    let a = '\u01D1',b = '\u004F\u030C';
     log("'\u01D1' === '\u004F\u030C'", '\u01D1' === '\u004F\u030C'); //false
     log("'\u01D1'.normalize() === '\u004F\u030C'.normalize()", '\u01D1'.normalize() === '\u004F\u030C'.normalize()); //true
     __groupEnd();
@@ -108,7 +109,6 @@
     }
     log("codePointLength('abc')",codePointLength("abc"));    // 3
     log('codePointLength("𠮷bc")',codePointLength("𠮷bc"));   // 3
-
     __groupEnd();
 
     __group("1.6.3 判断是否支持 u 标志")
@@ -122,12 +122,149 @@
     }
     log("hasRegExpU()",hasRegExpU()); //true
     __groupEnd();
-
     _groupEnd();
     groupEnd();
 
     group("2. 字符串的其他改动");
+    _group("2.1 识别子字符串的方法");
+    var msg = "Hello world!";
+    log("var msg = 'Hello world!'");
+    /**
+     * includes(text,start) 方法：判断给定文本是否存在于字符串
+     * @param: text         - 需要搜索的文本
+     *          start(可选)  - 搜索起始位置索引
+     * @return: 存在返回 true ，否则返回 false
+     */
+    log('msg.includes("o")',msg.includes("o"));             // true
+    log('msg.includes("x")',msg.includes("x"));             // false
+    log('msg.includes("o", 8)',msg.includes("o", 8));       // false
 
+    /**
+     * startsWith(text,start) 方法：判断给定文本是否出现在字符串起始处
+     * @param: text         - 需要搜索的文本
+     *          start(可选)  - 搜索起始位置索引
+     * @return: 是则返回 true ，否则返回 false
+     */
+    log('msg.startsWith("Hello")',msg.startsWith("Hello"));       // true
+    log('msg.startsWith("o")',msg.startsWith("o"));               // false
+    log('msg.startsWith("o", 4)',msg.startsWith("o", 4));         // true
+
+    /**
+     * endsWith(text,n) 方法：判断给定文本是否出现在字符串结尾处
+     * @param: text         - 需要搜索的文本
+     *          n(可选)      - 搜索前n个字符
+     * @return: 是则返回 true ，否则返回 false
+     */
+    log('msg.endsWith("!")',msg.endsWith("!"));              // true
+    log('msg.endsWith("world!")',msg.endsWith("world!"));    // false
+    log('msg.endsWith("o", 5)',msg.endsWith("o", 5));        // true
+    log('msg.endsWith("o", 7)',msg.endsWith("o", 7));        // false
+    _groupEnd();
+
+    _group("2.2 repeat() 方法");
+    /**
+     * repeat( n ) 方法
+     * @param: n - 字符串的重复次数
+     * @return: 将初始字符串重复指定次数的新字符串
+     */
+    log("x".repeat(3));         // "xxx"
+    log("hello".repeat(2));     // "hellohello"
+    log("abc".repeat(4));       // "abcabcabcabc"
+    //参数如果是小数，会被取整。
+    log('na'.repeat(2.9));      // "nana"
+    _groupEnd();
+
+    groupEnd();
+
+    group("3. 正则表达式的其他改动");
+    _group("3.1 正则表达式 y 标志：影响正则表达式搜索时的粘连（ sticky ）属性");
+    // y 标志：y 修饰符的作用与 g 修饰符类似，也是全局匹配，后一次匹配都从上一次匹配成功的下一个位置 lastIndex 开始。
+    // 如果在该位置没有匹配成功，那么正则表达式将停止检索。
+    // y 与 g 的不同之处在于，g 修饰符只要剩余位置中存在匹配就可，而 y 修饰符确保匹配必须从剩余的第一个位置开始
+    // y 修饰符号隐含了头部匹配的标志 ^
+    var text = "hello1 hello2 hello3",
+            pattern = /hello\d\s?/,
+            result = pattern.exec(text),
+            globalPattern = /hello\d\s?/g,
+            globalResult = globalPattern.exec(text),
+            stickyPattern = /hello\d\s?/y,
+            stickyResult = stickyPattern.exec(text);
+
+    log("/hello\\d\\s?/.exec('hello1 hello2 hello3')",result);         // "hello1 "
+    log("/hello\\d\\s?/g.exec('hello1 hello2 hello3')",globalResult);   // "hello1 "
+    log("/hello\\d\\s?/y.exec('hello1 hello2 hello3')",stickyResult);   // "hello1 "
+
+    log("pattern.lastIndex",pattern.lastIndex)
+    log("globalPattern.lastIndex",globalPattern.lastIndex)
+    log("stickyPattern.lastIndex",stickyPattern.lastIndex)
+    log("将所有模式的 lastIndex = 1 ，结果：")
+    pattern.lastIndex = 1;
+    globalPattern.lastIndex = 1;
+    stickyPattern.lastIndex = 1;
+
+    result = pattern.exec(text);
+    globalResult = globalPattern.exec(text);
+    stickyResult = stickyPattern.exec(text);
+
+//    log(result[0]);         // "hello1 "
+//    log(globalResult[0]);   // "hello2 "
+
+    log("/hello\\d\\s?/.exec('hello1 hello2 hello3')",result);         // "hello1 "
+    log("/hello\\d\\s?/g.exec('hello1 hello2 hello3')",globalResult);   // "hello2 "
+    try{
+        log(stickyResult[0]);   // 错误！ stickyResult 的值为 null
+    }catch(e){
+        log(e);
+    }
+
+    // 可以根据属性 sticky 来检测 y 标志是否存在。
+    log("stickyPattern.sticky",stickyPattern.sticky);
+
+    // 在旧版 JS 引擎中使用 y 标志会造成语法错误。你可以用如下方法来检测它是否被支持：
+    function hasRegExpY() {
+        try {
+            var pattern = new RegExp(".", "y");
+            return true;
+        } catch (ex) {
+            return false;
+        }
+    }
+    log("hasRegExpY()",hasRegExpY());
+    _groupEnd();
+
+    _group("3.2 复制正则表达式");
+    // 在 ES5 中，你可以将正则表达式传递给 RegExp 构造器来复制它
+    var re1 = /ab/i,
+            re2 = new RegExp(re1);
+
+    // 但如果你向 RegExp 构造器传递了第二个参数，即正则表达式的标志，那么该代码就无法工作
+    var re1 = /ab/i,
+    // ES5 中会抛出错误, ES6 中可用
+    // 它会覆盖第一个参数中的标志。
+            re2 = new RegExp(re1, "g");
+
+    _groupEnd();
+
+    _group("3.3 flags属性");
+    // 在 ES5 中，可以使用 source 属性来获取正则表达式的文本，
+    // 但若想获取标志字符串，必须解析 toString() 方法的输出
+    function getFlags(re) {
+        var text = re.toString();
+        log(re,".toString()",text);
+        return text.substring(text.lastIndexOf("/") + 1, text.length);
+    }
+
+    // toString() 的输出为 "/ab/g"
+    var re = /ab/g;
+    log("getFlags(/ab/g)",getFlags(re));          // "g"
+
+    //ES6 后期加入的 flags 属性，会返回由正则表达式中所有标志组成的字符串。
+    var re = /ab/gi;
+
+    log(re,"source",re.source);     // "ab"
+    log(re,"flags",re.flags);      // "g"
+
+    _groupEnd();
 
     groupEnd();
 </script>
