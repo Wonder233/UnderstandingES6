@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>扩展的对象功能</title>
+    <link href="../style.css" rel="stylesheet">
+    <script src="../tools.js"></script>
+</head>
+<body>
+<h1>扩展的对象功能</h1>
+</body>
+<script>
+    group("1. 对象类别");
+    /**
+     * (1)普通对象：拥有 JS 对象所有默认的内部行为。
+     * (2)奇异对象：其内部行为在某些方面有别于默认行为。
+     * (3)标准对象：在 ES6 中被定义的对象，例如 Array 、 Date ，等等。标准对象可以是普通的，也可以是奇异的。
+     * (4)内置对象：脚本在 JS 运行环境中开始运行时可用的对象。所有的标准对象都是内置对象。
+     */
+    groupEnd();
+
+    group("2. 对象字面量语法的扩展");
+    _group("2.1 属性初始化器的速记法");
+    // 1. 在 ES5 及更早版本中
+    function createPerson1(name, age) {
+        return {
+            name: name,
+            age: age
+        };
+    }
+
+    // 2. 在 ES6 中，你可以使用属性初始化器的速记法来消除对象名称与本地变量名的重复情况。
+    function createPerson2(name, age) {
+        return {
+            name,
+            age
+        };
+    }
+    _groupEnd();
+
+    _group("2.2 方法简写");
+    // 3. 在 ES5 及更早版本中，你必须指定一个名称并用完整的函数定义来为对象添加方法
+    var person1 = {
+        name: "Nicholas",
+        sayName: function() {
+            log(this.name);
+        }
+    };
+    // 4. ES6 将这个语法变得更简洁：省略冒号与 function 关键字
+    var person2 = {
+        name: "Nicholas",
+        sayName() {
+            log(this.name);
+        }
+    };
+    _groupEnd();
+
+    _group("2.3 可计算属性名");
+    /**
+     * 1. 在 ES5 及更早版本中，对象实例能使用“可计算的属性名”，只要用方括号表示法来代替小数点表示法即可。
+     * 方括号允许你指定变量或字符串字面量为属性名，并且在字符串中允许存在不能用于标识符的特殊字符。
+     */
+    var person3 = {},
+            lastName = "last name";
+
+    person3["first name"] = "Nicholas";
+    person3[lastName] = "Zakas";
+
+    // 属性名都包含了空格，这种情况是无法使用小数点表示法的，而方括号表示法允许将任意字符串用作属性名。
+    log(person3["first name"]);      // "Nicholas"
+    log(person3[lastName]);          // "Zakas"
+    // 若属性名被包含在变量中（就像前面例子中的 "first name" ），或者必须通过计算才能获得，
+    // 那么在 ES5 中就无法为对象字面量定义这种属性。
+
+    // 2. 在 ES6 中，可计算属性名是对象字面量语法的一部分。
+    var suffix = " name";
+
+    var person4 = {
+            ["first" + suffix]: "Nicholas",
+            ["last" + suffix]: "Zakas"
+    };
+
+    log(person4["first name"]);      // "Nicholas"
+    log(person4["last name"]);       // "Zakas"
+    _groupEnd();
+    groupEnd();
+
+    group("3. 新的方法");
+    _group("3.1 Object.is() 方法");
+    // ES5 :可能会使用相等运算符（ == ）或严格相等运算符（ === ）
+    // 为了避免在比较时发生强制类型转换，许多开发者更倾向于使用后者。
+    /**
+     * 严格相等运算符也并不完全准确
+     */
+    log("+0 == -0",+0 == -0);              // true
+    log("+0 === -0",+0 === -0);             // true
+    log("Object.is(+0, -0)",Object.is(+0, -0));     // false
+
+    log("NaN == NaN",NaN == NaN);            // false
+    log("NaN === NaN",NaN === NaN);           // false
+    log("Object.is(NaN, NaN)",Object.is(NaN, NaN));   // true
+
+    log("5 == 5",5 == 5);                // true
+    log("5 == '5'",5 == "5");              // true
+    log("5 === 5",5 === 5);               // true
+    log("5 === '5'",5 === "5");             // false
+    log("Object.is(5, 5)",Object.is(5, 5));       // true
+    log("Object.is(5, '5')",Object.is(5, "5"));     // false
+
+    _groupEnd();
+
+    _group("3.2 Object.assign() 方法");
+    /**
+     * 混入（ Mixin ）: 在一次混入中，一个对象会从另一个对象中接收属性与方法.
+     */
+
+    // ES5 中
+    function mixin(receiver, supplier) {
+        Object.keys(supplier).forEach(function(key) {
+            receiver[key] = supplier[key]; //浅复制，当属性值为对象时，仅复制其引用
+        });
+        //这样 receiver 对象就能获得新的属性而无须使用继承
+        return receiver;
+    }
+
+    /**
+     * ES6 添加了 Object.assign() 方法来完成同样的行为。
+     * @param: accept - 接收者对象
+     *          ...source - 任意数量的源对象
+     * @return: 拼接后的 accept 对象
+     */
+    function EventTarget() { /*...*/ }
+    EventTarget.prototype = {
+        constructor: EventTarget,
+        emit: function() { /*...*/ },
+        on: function() { /*...*/ }
+    }
+    var myObject = {}
+    Object.assign(myObject, EventTarget.prototype);
+    log(myObject)
+
+    // 接收对象会按照源对象在参数中的顺序来依次接收它们的属性。
+    // 这意味着在接收对象中，后面源对象的属性可能会覆盖前面的。
+    var receiver = {};
+    Object.assign(receiver, {
+                type: "js",
+                name: "file.js"
+            }, {
+                type: "css"
+            }
+    );
+    log(receiver.type);     // "css"
+    log(receiver.name);     // "file.js"
+    _groupEnd();
+    groupEnd();
+
+    group("4. 重复的对象字面量属性");
+    //  ES6 移除了重复属性的检查，无论是否严格模式，都不再进行检查。
+    // 当存在重复属性时，排在后面的属性的值会成为该属性的实际值
+    var person5 = {
+        name: "Nicholas",
+        name: "Greg"        // 在 ES6 严格模式中不会出错
+    };
+    console.log(person5.name);       // "Greg"
+    groupEnd();
+
+    group("5. 自有属性的枚举顺序");
+    /**
+     * ES6 则严格定义了对象自有属性在被枚举时的返回顺序。
+     * 这影响了 Object.getOwnPropertyNames() 与 Reflect.ownKeys （详见第十二章）返回属性的方式，
+     * 也同样影响了 Object.assign() 处理属性的顺序。
+     */
+
+    /**
+     * 自有属性枚举时基本顺序如下：
+     * (1)所有的数字类型键，按 升序 排列。
+     * (2)所有的字符串类型键，按 被添加到对象的顺序 排列。
+     * (3)所有的符号类型（详见第六章）键，也按 添加顺序 排列。
+     */
+    var obj = {
+        a: 1,
+        0: 1,
+        c: 1,
+        2: 1,
+        b: 1,
+        1: 1
+    };
+    obj.d = 1;
+    log(obj);
+    console.log("Object.getOwnPropertyNames(obj).join('')", Object.getOwnPropertyNames(obj).join(""));     // "012acbd"
+
+    groupEnd();
+
+    group("6. 更强大的原型");
+    _group("6.1 修改对象的原型");
+    // 1. ES5 添加了 Object.getPrototypeOf() 方法来获取任意指定对象的原型，
+    //    不过仍然缺少在初始化之后更改对象原型的标准方法。
+
+    // 2. ES6 通过添加 Object.setPrototypeOf() 方法而改变了这种假定
+    /**
+     * Object.setPrototypeOf()：允许你修改任意指定对象的原型
+     * @param: object - 需要被修改原型的对象
+     *          newObject - 将会成为前者原型的对象
+     */
+    let person6 = {
+        getGreeting() {
+            return "Hello";
+        }
+    };
+
+    let dog = {
+        getGreeting() {
+            return "Woof";
+        }
+    };
+    // 原型为 person6
+    let friend1 = Object.create(person6);
+    console.log(friend1.getGreeting());                      // "Hello"
+    console.log(Object.getPrototypeOf(friend1) === person6);  // true
+
+    // 将原型设置为 dog
+    Object.setPrototypeOf(friend1, dog);
+    console.log(friend1.getGreeting());                      // "Woof"
+    console.log(Object.getPrototypeOf(friend1) === dog);     // true
+
+    _groupEnd();
+
+    _group("6.2 使用 super 引用的简单原型访问");
+    let friend2 = {
+        getGreeting() {
+            return Object.getPrototypeOf(this).getGreeting.call(this) + ", hi!";
+        }
+    };
+    let friend3 = {
+        getGreeting() {
+        // 这相当于上个例子中的：
+        // Object.getPrototypeOf(this).getGreeting.call(this)
+            return super.getGreeting() + ", hi!";
+        }
+    };
+    log(friend3);
+
+    //试图在方法简写之外的情况使用 super 会导致语法错误
+    let friend4 = {
+        getGreeting: function() {
+            // 语法错误
+            /*
+            return super.getGreeting() + ", hi!";
+            */
+        }
+    };
+
+
+    // 3. ES5 当使用多级继承时， Object.getPrototypeOf() 不再适用于所有场景
+    let person7 = {
+        getGreeting() {
+            return "Hello";
+        }
+    };
+
+    // 原型为 person7
+    let friend5 = {
+        getGreeting() {
+            return Object.getPrototypeOf(this).getGreeting.call(this) + ", hi!";
+        }
+    };
+    Object.setPrototypeOf(friend5, person7);
+
+    // 原型为 friend
+    let relative = Object.create(friend5);
+    console.log(person7.getGreeting());                  // "Hello"
+    console.log(friend5.getGreeting());                  // "Hello, hi!"
+    try{
+        // 因为此时 this 的值是 relative ，而 relative 的原型是 friend 对象，
+        // 这样 friend.getGreeting().call() 调用就会导致进程开始反复进行递归调用，直到发生堆栈错误。
+        console.log(relative.getGreeting());                // error!
+    }catch(e){
+        log(e);
+    }
+
+    // 4. 使用 ES6 的 super 进行多级继承
+    let person8 = {
+        getGreeting() {
+            return "Hello";
+        }
+    };
+
+    // 原型为 person8
+    let friend6 = {
+        getGreeting() {
+            return super.getGreeting() + ", hi!";
+        }
+    };
+    Object.setPrototypeOf(friend6, person8);
+
+    // 原型为 friend
+    let relative = Object.create(friend6);
+
+    console.log(person8.getGreeting());                  // "Hello"
+    console.log(friend6.getGreeting());                  // "Hello, hi!"
+    console.log(relative.getGreeting());                // "Hello, hi!"
+
+    _groupEnd();
+    groupEnd();
+
+    group("7. 正式的“方法”定义");
+    /**
+     * ES6 则正式将方法定义为：一个拥有 [[HomeObject]] 内部属性的函数，此内部属性指向该方法所属的对象。
+     */
+    let person9 = {
+        // 方法 : 由于 getGreeting() 被直接赋给了一个对象，它的 [[HomeObject]] 属性值就是 person9 。
+        getGreeting() {
+            return "Hello";
+        }
+    };
+
+    // 并非方法 : shareGreeting() 函数被创建时并没有赋给一个对象，它就不具备 [[HomeObject]] 属性。
+    function shareGreeting() {
+        return "Hi!";
+    }
+
+    // 原型为 person9
+    let friend7 = {
+        getGreeting() {
+            // 任何对 super 的引用都会使用 [[HomeObject]] 属性来判断要做什么。
+            /**
+             * 第一步是在 [[HomeObject]] 上调用 Object.getPrototypeOf() 来获取对原型的引用；
+             * 接下来，在该原型上查找同名函数；
+             * 最后，创建 this 绑定并调用该方法。
+             */
+            return super.getGreeting() + ", hi!";
+        }
+    };
+
+    Object.setPrototypeOf(friend7,person9);
+    console.log(friend7.getGreeting());  // "Hello, hi!"
+    groupEnd();
+</script>
+</html>
