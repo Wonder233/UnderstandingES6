@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>JS的类</title>
+    <link href="../style.css" rel="stylesheet">
+    <script src="../tools.js"></script>
+</head>
+<body>
+<h1>JS的类</h1>
+</body>
+<script>
+    group("1. ES5 中的仿类结构");
+    {
+        // 创建一个自定义类型。
+        function PersonType(name) {
+            this.name = name;
+        }
+
+        PersonType.prototype.sayName = function() {
+            console.log(this.name);
+        };
+
+        let person = new PersonType("Nicholas");
+        person.sayName();   // 输出 "Nicholas"
+
+        console.log(person instanceof PersonType);  // true
+        console.log(person instanceof Object);      // true
+    }
+    groupEnd();
+
+    group("2. 类的声明");
+    _group("2.1 基本的类声明");
+    {
+        class PersonClass {
+            // 等价于 PersonType 构造器
+            constructor(name) {
+                this.name = name;
+            }
+
+            // 等价于 PersonType.prototype.sayName
+            sayName() {
+                console.log(this.name);
+            }
+        }
+        log("PersonType =",PersonType)
+        log("PersonType.prototype =",PersonType.prototype)
+
+        let person = new PersonClass("Nicholas");
+        person.sayName();   // 输出 "Nicholas"
+
+        console.log("person instanceof PersonClass =",person instanceof PersonClass);     // true
+        console.log("person instanceof Object =",person instanceof Object);          // true
+
+        console.log("typeof PersonClass =",typeof PersonClass);                    // "function"
+        console.log("typeof PersonClass.prototype.sayName =",typeof PersonClass.prototype.sayName);  // "function"
+    }
+    _groupEnd();
+
+
+    _group("2.2 为何要使用类的语法");
+    {
+        /**
+         * 类与自定义类型之间的区别：
+         * （1）类声明不会被提升，这与函数定义不同。类声明的行为与 let 相似，因此在程序执行到声明处之前，类都会位于暂时性死区内。
+         * （2）类声明中的所有代码会自动运行并锁定在严格模式下。
+         * （3）类的所有方法都是不可枚举的，这是对于自定义类型的显著变化，
+         *      后者必须用 Object.defineProperty() 才能将方法改变为不可枚举。
+         * （4）类的所有方法内部都没有 [[Construct]] ，因此使用 new 来调用它们会抛出错误。
+         * （5）调用类构造器时不使用 new ，会抛出错误。
+         * （6）试图在类的方法内部重写类名，会抛出错误。
+         */
+
+        // 上例中的 PersonClass 声明实际上就直接等价于以下未使用类语法的代码：
+        // 直接等价于 PersonClass
+        let PersonType2 = (function() {
+            "use strict";
+            const PersonType2 = function(name) {
+                // 确认函数被调用时使用了 new
+                if (typeof new.target === "undefined") {
+                    throw new Error("Constructor must be called with new.");
+                }
+                this.name = name;
+            }
+
+            Object.defineProperty(PersonType2.prototype, "sayName", {
+                value: function() {
+                    // 确认函数被调用时没有使用 new
+                    if (typeof new.target !== "undefined") {
+                        throw new Error("Method cannot be called with new.");
+                    }
+                    console.log(this.name);
+                },
+                enumerable: false,
+                writable: true,
+                configurable: true
+            });
+            return PersonType2;
+        }());
+        log("PersonType2 =",PersonType2)
+        log("PersonType2.prototype =",PersonType2.prototype)
+    }
+    _groupEnd();
+    groupEnd();
+
+    group("3. 类表达式");
+    // 类表达式被设计用于变量声明，或可作为参数传递给函数。
+
+    _group("3.1 基本的类表达式");
+    {
+        let PersonClass = class {
+            // 等价于 PersonType 构造器
+            constructor(name) {
+                this.name = name;
+            }
+            // 等价于 PersonType.prototype.sayName
+            sayName() {
+                console.log(this.name);
+            }
+        };
+        let person = new PersonClass("Nicholas");
+        person.sayName();   // 输出 "Nicholas"
+
+
+        console.log("person instanceof PersonClass =",person instanceof PersonClass);     // true
+        console.log("person instanceof Object =",person instanceof Object);          // true
+
+        console.log("typeof PersonClass =",typeof PersonClass);                    // "function"
+        console.log("typeof PersonClass.prototype.sayName =",typeof PersonClass.prototype.sayName);  // "function"
+    }
+    // 类表达式不需要在 class 关键字后使用标识符。
+    // 除了语法差异，类表达式的功能等价于类声明。
+    _groupEnd();
+
+    _group("3.2 具名类表达式");
+    {
+        // 上一节的示例使用了一个匿名的类表达式。
+        // 像函数表达式那样，也可以为类表达式命名。为此需要在 class 关键字后添加标识符。
+        let PersonClass = class PersonClass2 {
+            // 等价于 PersonType 构造器
+            constructor(name) {
+                this.name = name;
+            }
+            // 等价于 PersonType.prototype.sayName
+            sayName() {
+                console.log(this.name);
+            }
+        };
+        console.log(typeof PersonClass);        // "function"
+
+        // PersonClass2 标识符只在类定义内部存在，因此只能用在类方法内部。
+        // 在类的外部， typeof PersonClass2 的结果为 "undefined" ，这是因为外部不存在 PersonClass2 绑定。
+        console.log(typeof PersonClass2);       // "undefined"
+    }
+    _groupEnd();
+    groupEnd();
+
+    group("4. 作为一等公民的类");
+    {
+        // 一等公民 : 能作为参数传入函数
+        function createObject(classDef) {
+            return new classDef();
+        }
+
+        let obj = createObject(
+            class {
+                sayHi() {
+                    console.log("Hi!");
+                }
+            });
+
+        obj.sayHi();        // "Hi!"
+    }
+    {
+        // 类表达式的另一个有趣用途是立即调用类构造器，用于创建单例（ Singleton ）。
+        // 必须使用 new 来配合类表达式，并在表达式后面添加括号。
+        let person = new class {
+            constructor(name) {
+                this.name = name;
+            }
+            sayName() {
+                console.log(this.name);
+            }
+        }("Nicholas");
+
+        person.sayName();       // "Nicholas"
+    }
+    groupEnd();
+
+    group("5. 访问器属性");
+    {
+        // 自有属性需要在类构造器中创建，而类还允许你在原型上定义访问器属性。
+        /**
+         * 为了创建一个 getter ，要使用 get 关键字，并要与后方标识符之间留出空格；
+         * 创建 setter 用相同方式，只是要改用 set 关键字。
+         */
+        class CustomHTMLElement {
+            constructor(element) {
+                this.element = element;
+            }
+            get html() {
+                return this.element.innerHTML;
+            }
+            set html(value) {
+                this.element.innerHTML = value;
+            }
+        }
+        var descriptor = Object.getOwnPropertyDescriptor(CustomHTMLElement.prototype, "html");
+        log("descriptor",descriptor);
+        console.log('"get" in descriptor',"get" in descriptor);   // true
+        console.log('"get" in descriptor',"set" in descriptor);   // true
+        console.log('descriptor.enumerable',descriptor.enumerable); // false
+    }
+    {
+        // 直接等价于上个范例
+        let CustomHTMLElement = (function() {
+            "use strict";
+            const CustomHTMLElement = function(element) {
+                // 确认函数被调用时使用了 new
+                if (typeof new.target === "undefined") {
+                    throw new Error("Constructor must be called with new.");
+                }
+                this.element = element;
+            }
+
+            Object.defineProperty(CustomHTMLElement.prototype, "html", {
+                enumerable: false,
+                configurable: true,
+                get: function() {
+                    return this.element.innerHTML;
+                },
+                set: function(value) {
+                    this.element.innerHTML = value;
+                }
+            });
+
+            return CustomHTMLElement;
+        }());
+    }
+    groupEnd();
+
+    group("6. 可计算的成员名");
+    {
+        // 类方法能使用可计算的名称：用方括号来包裹一个表达式
+        let methodName = "sayName";
+        class PersonClass {
+            constructor(name) {
+                this.name = name;
+            }
+            [methodName]() {
+                console.log(this.name);
+            }
+        }
+
+        let me = new PersonClass("Nicholas");
+        me.sayName();           // "Nicholas"
+    }
+    {
+        // 访问器属性也能使用可计算的名称：用方括号来包裹一个表达式
+        let propertyName = "html";
+        class CustomHTMLElement {
+            constructor(element) {
+                this.element = element;
+            }
+            get [propertyName]() {
+                return this.element.innerHTML;
+            }
+            set [propertyName](value) {
+                this.element.innerHTML = value;
+            }
+        }
+    }
+    groupEnd();
+
+    group("7. 生成器方法");
+    {
+        //此代码创建了一个拥有 createIterator() 生成器的 MyClass 类。该方法返回了一个迭代器，它的值在生成器内部用硬编码提供。
+        class MyClass {
+            *createIterator() {
+                yield 1;
+                yield 2;
+                yield 3;
+            }
+        }
+
+        let instance = new MyClass();
+        log("instance = ",instance);
+        let iterator = instance.createIterator();
+        for(let i of iterator){
+            log(i);
+        }
+    }
+    {
+        log("在表示集合的自定义类中定义一个默认迭代器。")
+        // 使用 Symbol.iterator 来定义生成器方法，从而定义出类的默认迭代器。
+        class Collection {
+            constructor() {
+                this.items = [];
+            }
+            *[Symbol.iterator]() {
+                yield *this.items;
+            }
+        }
+
+        var collection = new Collection();
+        collection.items.push(1);
+        collection.items.push(2);
+        collection.items.push(3);
+
+        for (let x of collection) {
+            console.log(x);
+        }
+
+    }
+    groupEnd();
+
+    group("8. 静态成员");
+    {
+        // 直接在构造器上添加额外方法来模拟静态成员，这在 ES5 及更早版本中是另一个通用的模式。
+        function PersonType(name) {
+            this.name = name;
+        }
+
+        // 静态方法
+        PersonType.create = function(name) {
+            return new PersonType(name);
+        };
+
+        // 实例方法
+        PersonType.prototype.sayName = function() {
+            console.log(this.name);
+        };
+
+        var person = PersonType.create("Nicholas");
+    }
+    {
+        // ES6 的类简化了静态成员的创建，只要在方法与访问器属性的名称前添加正式的 static 标注。
+        class PersonClass {
+            // 等价于 PersonType 构造器
+            constructor(name) {
+                this.name = name;
+            }
+
+            // 等价于 PersonType.prototype.sayName
+            sayName() {
+                console.log(this.name);
+            }
+
+            // 等价于 PersonType.create
+            static create(name) {
+                return new PersonClass(name);
+            }
+        }
+
+        let person = PersonClass.create("Nicholas");
+        log("ES6 创建静态成员",PersonClass)
+    }
+    groupEnd();
+
+    group("9. 使用派生类进行继承");
+    {
+        // ES6 之前，实现自定义类型的继承是个繁琐的过程。
+        function Rectangle(length, width) {
+            this.length = length;
+            this.width = width;
+        }
+
+        Rectangle.prototype.getArea = function() {
+            return this.length * this.width;
+        };
+
+        function Square(length) {
+            Rectangle.call(this, length, length);
+        }
+
+        Square.prototype = Object.create(Rectangle.prototype, {
+            constructor: {
+                value:Square,
+                enumerable: true,
+                writable: true,
+                configurable: true
+            }
+        });
+
+        var square = new Square(3);
+        log("ES5 中：")
+        console.log("square.getArea()",square.getArea());              // 9
+        console.log("square instanceof Square",square instanceof Square);      // true
+        console.log("square instanceof Rectangle",square instanceof Rectangle);   // true
+    }
+    {
+        // ES6 中，使用 extends 关键字来指定当前类所需要继承的函数即可。
+        // 生成的类的原型会被自动调整，而你还能调用 super() 方法来访问基类的构造器。
+        class Rectangle {
+            constructor(length, width) {
+                this.length = length;
+                this.width = width;
+            }
+
+            getArea() {
+                return this.length * this.width;
+            }
+        }
+
+        class Square extends Rectangle {
+            constructor(length) {
+                // 与 Rectangle.call(this, length, length) 相同
+                super(length, length);
+            }
+        }
+        var square = new Square(3);
+        log("ES6 中：")
+        console.log("square.getArea()",square.getArea());              // 9
+        console.log("square instanceof Square",square instanceof Square);      // true
+        console.log("square instanceof Rectangle",square instanceof Rectangle);   // true
+    }
+    {
+        // 继承了其他类的类被称为派生类（ derived classes ）。
+        // 如果派生类指定了构造器，就需要使用 super() ，否则会造成错误。
+        // 若你选择不使用构造器， super() 方法会被自动调用，并会使用创建新实例时提供的所有参数。
+        class Square1 extends Rectangle {
+            // 没有构造器
+        }
+
+        // 等价于：
+        class Square2 extends Rectangle {
+            constructor(...args) {
+                super(...args);
+            }
+        }
+
+        /**
+         * 使用 super() 时需牢记以下几点：
+         * （1）只能在派生类中使用 super() 。若尝试在非派生的类（即：没有使用 extends 关键字的类）或函数中使用它，就会抛出错误。
+         * （2）在构造器中，你必须在访问 this 之前调用 super() 。
+         *      由于 super() 负责初始化 this ，因此试图先访问 this 自然就会造成错误。
+         * （3）若在类的构造器中不调用 super() ，唯一避免出错的办法是在构造器中返回一个对象。
+         */
+    }
+    _group("9.1 屏蔽类方法");
+    {
+        class Square1 extends Rectangle {
+            constructor(length) {
+                super(length, length);
+            }
+            // 派生类中的方法总是会屏蔽基类的同名方法。
+            // 重写并屏蔽 Rectangle.prototype.getArea()
+            getArea() {
+                return this.length * this.length;
+            }
+        }
+        log(Square1)
+
+        class Square2 extends Rectangle {
+            constructor(length) {
+                super(length, length);
+            }
+            // 可以使用 super.getArea() 方法来调用基类中的该方法
+            // 重写并屏蔽 Rectangle.prototype.getArea()
+            getArea() {
+                return super.getArea();
+            }
+        }
+        log(Square2)
+    }
+    _groupEnd();
+    _group("9.2 继承静态成员");_groupEnd();
+    {
+        // 如果基类包含静态成员，那么这些静态成员在派生类中也是可用的。
+        class Rectangle {
+            constructor(length, width) {
+                this.length = length;
+                this.width = width;
+            }
+
+            getArea() {
+                return this.length * this.width;
+            }
+
+            static create(length, width) {
+                return new Rectangle(length, width);
+            }
+        }
+
+        class Square extends Rectangle {
+            constructor(length) {
+                // 与 Rectangle.call(this, length, length) 相同
+                super(length, length);
+            }
+        }
+
+        var rect = Square.create(3, 4);
+
+        console.log(rect instanceof Rectangle);     // true
+        console.log(rect.getArea());                // 12
+        console.log(rect instanceof Square);        // false
+    }
+    _group("9.3 从表达式中派生类");_groupEnd();
+    {
+        // 只要一个表达式能够返回一个具有 [[Construct]] 属性以及原型的函数，你就可以对其使用 extends 。
+        function Rectangle(length, width) {
+            this.length = length;
+            this.width = width;
+        }
+        Rectangle.prototype.getArea = function() {
+            return this.length * this.width;
+        };
+        // Rectangle 被定义为 ES5 风格的构造器
+
+        class Square extends Rectangle {
+            constructor(length) {
+                super(length, length);
+            }
+        }
+        var x = new Square(3);
+        console.log(x.getArea());               // 9
+        console.log(x instanceof Rectangle);    // true
+    }
+    {
+        // extends 后面能接受任意类型的表达式
+
+        function Rectangle(length, width) {
+            this.length = length;
+            this.width = width;
+        }
+
+        Rectangle.prototype.getArea = function() {
+            return this.length * this.width;
+        };
+
+        function getBase() {
+            return Rectangle;
+        }
+
+        // 动态地决定所要继承的类：
+        class Square extends getBase() {
+            constructor(length) {
+                super(length, length);
+            }
+        }
+
+        var x = new Square(3);
+        console.log(x.getArea());               // 9
+        console.log(x instanceof Rectangle);    // true
+    }
+    {
+        // 可以动态地决定基类，那也就能创建不同的继承方式。
+
+        // 可以有效地创建混入：
+        let SerializableMixin = {
+            serialize() {
+                return JSON.stringify(this);
+            }
+        };
+
+        let AreaMixin = {
+            getArea() {
+                return this.length * this.width;
+            }
+        };
+
+        // mixin() 函数接受代表混入对象的任意数量的参数，它创建了一个名为 base 的函数，
+        // 并将每个混入对象的属性都赋值到新函数的原型上。
+        function mixin(...mixins) {
+            var base = function() {};
+            Object.assign(base.prototype, ...mixins);
+            return base;
+        }
+
+        class Square extends mixin(AreaMixin, SerializableMixin) {
+            constructor(length) {
+                super();
+                this.length = length;
+                this.width = length;
+            }
+        }
+
+        var x = new Square(3);
+        console.log(x.getArea());               // 9
+        console.log(x.serialize());             // "{"length":3,"width":3}"
+    }
+    _group("9.4 继承内置对象");
+    // 开发者想通过继承机制来创建他们自己的特殊数组类型，在 ES5 及早期版本中，这是不可能做到的。
+    // 试图使用传统继承并不能产生功能正确的代码。
+    {
+        __group("ES5中，内置数组的行为：")
+        var colors = [];
+        colors[0] = "red";
+        console.log("colors.length =", colors.length);         // 1
+
+        colors.length = 0;
+        console.log("colors[0] =", colors[0]);             // undefined
+        __groupEnd();
+    }
+    {
+        __group("ES5中，尝试继承数组：")
+        function MyArray() {
+            Array.apply(this, arguments);
+        }
+        MyArray.prototype = Object.create(Array.prototype, {
+            constructor: {
+                value: MyArray,
+                writable: true,
+                configurable: true,
+                enumerable: true
+            }
+        });
+        var colors = new MyArray();
+        colors[0] = "red";
+        console.log("colors.length =",colors.length);         // 0
+
+        colors.length = 0;
+        console.log("colors[0] =",colors[0]);             // "red"
+        __groupEnd();
+    }
+    /**
+     * 在 ES5 的传统继承中， this 的值会先被派生类（例如 MyArray ）创建，随后基类构造器（例如 Array.apply() 方法）才被调用。
+     * 这意味着 this 一开始就是 MyArray 的实例，之后才使用了 Array 的附加属性对其进行了装饰。
+     */
+    /**
+     * 在 ES6 基于类的继承中， this 的值会先被基类（ Array ）创建，随后才被派生类的构造器（ MyArray ）所修改。
+     * 结果是 this 初始就拥有作为基类的内置对象的所有功能，并能正确接收与之关联的所有功能。
+     */
+    {
+        // ES6 中，通过继承机制来创建他们自己的特殊数组类型。
+        __group("ES6中，尝试继承数组：")
+        class MyArray extends Array {
+            // 空代码块
+        }
+
+        var colors = new MyArray();
+        colors[0] = "red";
+        console.log("colors.length =",colors.length);         // 1
+
+        colors.length = 0;
+        console.log("colors[0] =",colors[0]);             // undefined
+        __groupEnd();
+    }
+    _groupEnd();
+
+    _group("9.5 Symbol.species 属性");_groupEnd();
+    // 继承内置对象会带来一个有趣特性：任意能返回内置对象实例的方法，在派生类上却会自动返回派生类的实例。
+    {
+        class MyArray extends Array {
+            // 空代码块
+        }
+
+        let items = new MyArray(1, 2, 3, 4),
+                subitems = items.slice(1, 3);
+
+        console.log("items instanceof MyArray =",items instanceof MyArray);      // true
+        console.log("subitems instanceof MyArray =",subitems instanceof MyArray);   // true
+    }
+    // Symbol.species 知名符号被用于定义一个能返回函数的静态访问器属性。
+    // 每当类实例除了构造器之外的方法必须创建一个实例时，前面返回的函数就被用为新实例的构造器。
+    /**
+     * 下列内置类型都定义了 Symbol.species ：
+     * Array
+     * ArrayBuffer
+     * Map
+     * Promise
+     * RegExp
+     * Set
+     * 类型化数组
+     */
+    {
+        // 在一个自定义类上实现 Symbol.species 功能
+
+        // 几个内置类型使用 species 的方式类似于此
+        class MyClass {
+            // Symbol.species 知名符号被用于定义 MyClass 的一个静态访问器属性。
+            // 注意此处只有 getter 而没有 setter ，这是因为修改类的种类是不允许的。
+            static get [Symbol.species]() {
+                return this;
+            }
+
+            constructor(value) {
+                this.value = value;
+            }
+
+            // 任何对 this.constructor[Symbol.species] 的调用都会返回 MyClass
+            // clone() 方法使用了该定义来返回一个新的实例，而没有直接使用 MyClass ，这就允许派生类重写这个值。
+            clone() {
+                return new this.constructor[Symbol.species](this.value);
+            }
+        }
+
+        class MyDerivedClass1 extends MyClass {
+            // 空代码块
+        }
+
+        class MyDerivedClass2 extends MyClass {
+            static get [Symbol.species]() {
+                return MyClass;
+            }
+        }
+
+        let instance1 = new MyDerivedClass1("foo"),
+                clone1 = instance1.clone(),
+                instance2 = new MyDerivedClass2("bar"),
+                clone2 = instance2.clone();
+
+        console.log(clone1 instanceof MyClass);             // true
+        console.log(clone1 instanceof MyDerivedClass1);     // true
+        console.log(clone2 instanceof MyClass);             // true
+        console.log(clone2 instanceof MyDerivedClass2);     // false
+
+    }
+    groupEnd();
+
+    group("10. 在类构造器中使用 new.target");
+    {
+        // 在简单情况下， new.target 就等于本类的构造器函数
+        class Rectangle {
+            constructor(length, width) {
+                console.log("new.target === Rectangle",new.target === Rectangle);
+                this.length = length;
+                this.width = width;
+            }
+        }
+
+        // new.target 就是 Rectangle
+        var obj = new Rectangle(3, 4);      // 输出 true
+    }
+    // 类构造器被调用时不能缺少 new ，因此 new.target 属性就始终会在类构造器内被定义。
+    // 不过这个值并不总是不变的。
+    {
+        class Rectangle {
+            constructor(length, width) {
+                console.log(new.target === Rectangle);
+                this.length = length;
+                this.width = width;
+            }
+        }
+        class Square extends Rectangle {
+            constructor(length) {
+                super(length, length)
+            }
+        }
+        // new.target 就是 Square
+        var obj = new Square(3);      // 输出 false
+    }
+    // 可以使用 new.target 来创建一个抽象基类（一种不能被实例化的类）
+    {
+        // 静态的基类
+        class Shape {
+            constructor() {
+                if (new.target === Shape) {
+                    throw new Error("This class cannot be instantiated directly.")
+                }
+            }
+        }
+        class Rectangle extends Shape {
+            constructor(length, width) {
+                super();
+                this.length = length;
+                this.width = width;
+            }
+        }
+
+        try{
+            var x = new Shape();                // 抛出错误
+        }catch(e){
+            log(e);
+        }
+        var y = new Rectangle(3, 4);        // 没有错误
+        console.log(y instanceof Shape);    // true
+    }
+    groupEnd();
+</script>
+</html>
