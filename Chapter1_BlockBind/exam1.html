@@ -18,18 +18,20 @@
      * 使用 var 关键字声明的变量，无论其实际声明位置在何处，都会被视为声明于所在函数的顶部
      * （如果声明不在任意函数内，则视为在全局作用域的顶部）。这就是所谓的变量提升（ hoisting ）。
      */
-    function getValue1(condition) {
-        if (condition) {
-            var value = "blue";
-            // 其他代码
-            return value;
-        } else {
-            log(value); // value 在此处可访问，值为 undefined
-            return null;
+    {
+        function getValue(condition) {
+            if (condition) {
+                var value = "blue";
+                // 其他代码
+                return value;
+            } else {
+                log(value); // value 在此处可访问，值为 undefined
+                return null;
+            }
+            // value 在此处可访问，值为 undefined
         }
-        // value 在此处可访问，值为 undefined
+        getValue();
     }
-    getValue1();
     groupEnd();
 
 
