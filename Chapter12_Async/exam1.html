@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Async</title>
+    <link href="../style.css" rel="stylesheet">
+    <script src="../tools.js"></script>
+</head>
+<body>
+<h1>Async</h1>
+</body>
+<script>
+    {
+        // 函数前面的async关键字，表明该函数内部有异步操作。
+        // 调用该函数时，会立即返回一个Promise对象。
+        async function getStockPriceByName(name) {
+            const symbol = await 11;
+            const stockPrice = await symbol+11;
+            return stockPrice;
+        }
+
+        getStockPriceByName('goog').then(function (result) {
+            console.log(result);
+        });
+    }
+    {
+        log("指定多少毫秒后输出一个值。");
+        function timeout(ms) {
+            return new Promise((resolve) => {
+                setTimeout(resolve, ms);
+            });
+        }
+
+        async function asyncPrint(value, ms) {
+            await timeout(ms);
+            console.log(value);
+        }
+
+        asyncPrint('hello world', 50);
+    }
+    {
+        async function f() {
+            await Promise.reject('出错了');
+        }
+
+        f().then(v => console.log(v))
+           .catch(e => console.log(e))
+    }
+</script>
+</html>
