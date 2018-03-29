@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Promise与异步编程</title>
+    <link href="../style.css" rel="stylesheet">
+    <script src="../tools.js"></script>
+</head>
+<body>
+<h1>Promise与异步编程</h1>
+<p>Promise 是异步编程的另一种选择，它的工作方式类似于在其他语言中进行延迟并在将来执行作业。</p>
+<p>一个 Promise 指定一些稍后要执行的代码（就像事件与回调函数一样），并且也明确标示了作业的代码是否执行成功。</p>
+</body>
+<script>
+    group("1. 异步编程的背景");
+    _group("1.1 事件模型");
+    _groupEnd();
+
+    _group("1.2 回调模式");
+    _groupEnd();
+    groupEnd();
+
+    group("2. Promise 基础");
+    _group("2.1 Promise 的生命周期");
+    _groupEnd();
+
+    _group("2.2 创建未处理的 Promise");
+    _groupEnd();
+
+    _group("2.3 创建已处理的 Promise");
+    {
+        // 使用Promise.resolve()
+        let promise = Promise.resolve("success");
+        promise.then(function(value) {
+            console.log("在执行器操作结束后再将fulfilled函数添加到作业队列中：",value);         // success
+        });
+        console.log("success!");
+    }
+    {
+        // 使用Promise.reject()
+        let promise = Promise.reject("reject");
+        promise.catch(function(value){
+            console.log("在执行器操作结束后再将rejected函数添加到作业队列中：",value);         // success
+        });
+        console.log("reject!");
+    }
+    {
+        // Promise.resolve() 与 Promise.reject() 都能接受非 Promise 的 thenable 作为参数。
+        let thenable = {
+            then: function(resolve, reject) {
+                resolve("thenable");
+            }
+        };
+
+        // 可以调用 Promise.resolve() 来将 thenable 转换为一个已完成的 Promise ：
+        let p1 = Promise.resolve(thenable);
+        p1.then(function(value) {
+            console.log("在执行器操作结束后再将thenable函数添加到作业队列中：",value);         // success
+        });
+        console.log("thenable!");
+    }
+    _groupEnd();
+
+    _group("2.4 执行器错误");
+    {
+        // 在执行器内部抛出了错误，那么 Promise 的拒绝处理函数就会被调用。
+        let promise = new Promise(function(resolve, reject) {
+            throw new Error("Explosion!");
+        });
+
+        promise.catch(function(error) {
+            console.log("在执行器内部抛出了错误",error.message);     // "Explosion!"
+        });
+    }
+    _groupEnd();
+    groupEnd();
+
+    group("3. 全局的 Promise 拒绝处理");
+    _group("3.1 Node.js 的拒绝处理");
+    _groupEnd();
+
+    _group("3.2 浏览器的拒绝处理");
+    {
+        // 触发两个事件 unhandledrejecion rejectionhandle
+
+        /**
+         * 浏览器事件的处理函数则只会接收到包含下列属性的一个对象：
+         * type ： 事件的名称（ "unhandledrejection" 或 "rejectionhandled" ）；
+         * promise ：被拒绝的 Promise 对象；
+         * reason ： Promise 中的拒绝值（拒绝原因）。
+         */
+        let rejected;
+
+        window.onunhandledrejection = function(event) {
+            console.log(event.type);                    // "unhandledrejection"
+            console.log(event.reason.message);          // "Explosion!"
+            console.log(rejected === event.promise);    // true
+        };
+
+        window.onrejectionhandled = function(event) {
+            console.log(event.type);                    // "rejectionhandled"
+            console.log(event.reason.message);          // "Explosion!"
+            console.log(rejected === event.promise);    // true
+        };
+
+//        rejected = Promise.reject(new Error("Explosion!"));
+    }
+    _groupEnd();
+    groupEnd();
+
+    group("4. 串联 Promise");
+    _group("4.1 捕获错误");
+    _groupEnd();
+
+    _group("4.2 在 Promise 链中返回值");
+    _groupEnd();
+
+    _group("4.3 在 Promise 链中返回 Promise");
+    _groupEnd();
+    groupEnd();
+
+    group("5. 响应多个 Promise");
+    _group("5.1 Promise.all() 方法");
+    {
+        let p1 = new Promise(function(resolve, reject) {
+            log("p1",42)
+            resolve(42);
+        });
+
+        let p2 = new Promise(function(resolve, reject) {
+            log("p2",43)
+            reject(43);
+        });
+
+        let p3 = new Promise(function(resolve, reject) {
+            log("p3",44)
+            resolve(44);
+        });
+
+        let p4 = Promise.all([p1, p2, p3]);
+
+        p4.catch(function(value) {
+            console.log("5.1",Array.isArray(value))   // false
+            console.log("5.1",value);                 // 43
+        });
+    }
+    _groupEnd();
+
+    _group("5.2 Promise.race() 方法");
+    {
+        let p1 = new Promise(function(resolve, reject) {
+//            setTimeout(function(){
+                resolve(42);
+//            }, 0);
+        });
+
+        let p2 = Promise.reject(43);
+
+        let p3 = new Promise(function(resolve, reject) {
+            resolve(44);
+        });
+
+        let p4 = Promise.race([p2, p1, p3]);
+
+        p4.catch(function(value) {
+            console.log("5.2",value);     // 43
+        });
+    }
+    _groupEnd();
+    groupEnd();
+
+    group("6. 继承 Promise");
+    groupEnd();
+
+    group("7. 异步任务运行");
+    {
+        let p1 = new Promise(function(resolve, reject) {
+            log("p1",42)
+            resolve(42);
+        });
+
+        let p2 = Promise.resolve(p1);
+        log("7",p2);
+
+        let p3 = new Promise(function(resolve, reject) {
+            log("p3",44)
+            resolve(44);
+        });
+
+        Promise.race([p2,p1,p3]).then(function (value) {
+            log("7.value",value)
+        })
+    }
+    {
+        log("看一下生成器中 yield 加上 log 是如何运行的：")
+        function *createIterator(){
+            yield "2"+1;
+            console.log("2");
+            yield 3;
+            console.log(3);
+        }
+        var i = createIterator();
+        log("8. 1",i.next());
+        log("8. 2",i.next());
+        log("8. 3",i.next());
+    }
+    groupEnd();
+</script>
+</html>

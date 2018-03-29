@@ -253,31 +253,32 @@
      * 4. 全局块级绑定
      */
     //使用 var 可能会无意中覆盖一个已有的全局属性
+    {
+        _group("var");
+        // 在浏览器中
+        log("RegExp = " + window.RegExp);
+        var RegExp = "Hello!";
+        log("RegExp = " + window.RegExp);     // "Hello!"
 
-    _group("var");
-    // 在浏览器中
-//    log("RegExp = " + window.RegExp);
-//    var RegExp = "Hello!";
-//    log("RegExp = " + window.RegExp);     // "Hello!"
+        var ncz1 = "Hi!";
+        log("ncz1 = " + window.ncz1);            // "Hi!"
+        log("'ncz1' in window:", "ncz1" in window);    // true
+        _groupEnd();
+    }
+    {
+        _group("let");
+        //若在全局作用域上使用 let 或 const ，虽然在全局作用域上会创建新的绑定，但不会有任何属性被添加到全局对象上。
+        //在浏览器中
+        let RegExp = "Hello!";
+        log("RegExp = " + RegExp);                    // "Hello!"
+        log("window.RegExp === RegExp：" + (window.RegExp === RegExp));  // false
+        log("window.RegExp = " + window.RegExp);
 
-    var ncz1 = "Hi!";
-    log("ncz1 = " + window.ncz1);            // "Hi!"
-    log("'ncz1' in window:", "ncz1" in window);    // true
-    _groupEnd();
-
-    _group("let");
-    //若在全局作用域上使用 let 或 const ，虽然在全局作用域上会创建新的绑定，但不会有任何属性被添加到全局对象上。
-    //在浏览器中
-    let RegExp = "Hello!";
-    log("RegExp = " + RegExp);                    // "Hello!"
-    log("window.RegExp === RegExp：" + (window.RegExp === RegExp));  // false
-    log("window.RegExp = " + window.RegExp);
-
-    const ncz2 = "Hi!";
-    log("ncz2 = " + ncz2);                         // "Hi!"
-    log("'ncz2' in window:", "ncz2" in window);   // false
-    _groupEnd();
-
+        const ncz2 = "Hi!";
+        log("ncz2 = " + ncz2);                         // "Hi!"
+        log("'ncz2' in window:", "ncz2" in window);   // false
+        _groupEnd();
+    }
     groupEnd();
 
 
