@@ -1,132 +1,158 @@
 <!DOCTYPE html>
 <html>
+
 <head lang="en">
-    <meta charset="UTF-8">
-    <title>字符串与正则表达式</title>
-    <link href="../style.css" rel="stylesheet">
-    <script src="../tools.js"></script>
+  <meta charset="UTF-8">
+  <title>字符串与正则表达式</title>
+  <link href="../style.css" rel="stylesheet">
+  <script src="../tools.js"></script>
 </head>
+
 <body>
-<h1>字符串与正则表达式</h1>
+  <h1>字符串与正则表达式</h1>
 </body>
 <script>
-    group("1. 更好的 Unicode 支持");
-    /**
-     * 1.更好的 Unicode 支持
-     */
+  group("1. 更好的 Unicode 支持");
+  /**
+   * 1.更好的 Unicode 支持
+   */
 
-    //在 ES5 中，所有字符串操作都基于 16 位码元，这表示在处理包含代理对的 UTF-16 字符时会出现预期外的结果
-    var text31 = "𠮷";
-    log("text31",text31);
-    log("text31.length",text31.length);           // 2
-    log("/^.$/.test(text31)",/^.$/.test(text31));      // false  ^.$ 表示匹配一个字符
+  //在 ES5 中，所有字符串操作都基于 16 位码元，这表示在处理包含代理对的 UTF-16 字符时会出现预期外的结果
+  {
+    var text = "𠮷";
+    log("text", text);
+    log("text.length", text.length); // 2
+    log("/^.$/.test(text)", /^.$/.test(text)); // false  ^.$ 表示匹配一个字符
 
     //charAt() 方法无法返回一个有效的字符，因为这里每 16 位码点都不是一个可打印字符。
-    log("charAt(0)",text31.charAt(0));        // "乱码"
-    log("charAt(1)",text31.charAt(1));        // "乱码"
+    log("charAt(0)", text.charAt(0)); // "乱码"
+    log("charAt(1)", text.charAt(1)); // "乱码"
+
     //charCodeAt() 方法同样无法正确识别该字符，它只能返回每个码元的 16 位数字
-    log("charCodeAt(0)",text31.charCodeAt(0));    // 55362
-    log("charCodeAt(1)",text31.charCodeAt(1));    // 57271
+    log("charCodeAt(0)", text.charCodeAt(0)); // 55362
+    log("charCodeAt(1)", text.charCodeAt(1)); // 57271
+  }
 
-    //ES6 则是强制执行 UTF-16 字符编码以解决此类问题，从而让字符串操作标准化
-    _group("1.1 codePointAt()");
-    var text32 = "𠮷a";
-    log("text32",text32);
+  //ES6 则是强制执行 UTF-16 字符编码以解决此类问题，从而让字符串操作标准化
+  _group("1.1 codePointAt()");
+  /**
+   * 1.1 codePointAt()
+   */
+  {
+    var text = "𠮷a";
+    log("text", text);
 
-    log("charCodeAt(0)",text32.charCodeAt(0));    // 55362
-    log("charCodeAt(1)",text32.charCodeAt(1));    // 57271
-    log("charCodeAt(2)",text32.charCodeAt(2));    // 97
+    log("charCodeAt(0)", text.charCodeAt(0)); // 55362
+    log("charCodeAt(1)", text.charCodeAt(1)); // 57271
+    log("charCodeAt(2)", text.charCodeAt(2)); // 97
 
-    log("codePointAt(0)",text32.codePointAt(0));   // 134071
-    log("codePointAt(1)",text32.codePointAt(1));   // 57271
-    log("codePointAt(2)",text32.codePointAt(2));   // 97
-    _groupEnd();
+    log("codePointAt(0)", text.codePointAt(0)); // 134071
+    log("codePointAt(1)", text.codePointAt(1)); // 57271
+    log("codePointAt(2)", text.codePointAt(2)); // 97
+  }
+  _groupEnd();
 
-    _group("1.2 判断字符包含了一个还是两个码元:");
+  _group("1.2 判断字符包含了一个还是两个码元:");
+  /**
+   * 1.2 判断字符包含了一个还是两个码元:
+   */
+  {
     function is32Bit(c) {
-        return c.codePointAt(0) > 0xFFFF;
+      return c.codePointAt(0) > 0xFFFF;
     }
-    log("is32Bit('𠮷')",is32Bit("𠮷"));        // true
-    log("is32Bit('a')",is32Bit("a"));          // false
-    _groupEnd();
+    log("is32Bit('𠮷')", is32Bit("𠮷")); // true
+    log("is32Bit('a')", is32Bit("a")); // false
+  }
+  _groupEnd();
 
-    _group("1.3 使用for...of循环，因为它会正确识别 32 位的 UTF-16 字符。");
+  _group("1.3 使用for...of循环，因为它会正确识别 32 位的 UTF-16 字符。"); {
     let s = '𠮷a';
     for (let ch of s) {
-        log(ch.codePointAt(0).toString(10));
+      log(ch.codePointAt(0).toString(10));
     }
-    _groupEnd();
+  }
+  _groupEnd();
 
-    _group("1.4 String.fromCodePoint() 方法");
-    /**
-     * String.fromCodePoint() 用给定的码点来产生包含单个字符的字符串。
-     *
-     * 注意，fromCodePoint方法定义在String对象上，而codePointAt方法定义在字符串的实例对象上。
-     */
-    log("String.fromCharCode(134071)",String.fromCharCode(134071));  // "ஷ"
-    log("String.fromCodePoint(134071)",String.fromCodePoint(134071));  // "𠮷"
-    _groupEnd();
+  _group("1.4 String.fromCodePoint() 方法");
+  /**
+   * String.fromCodePoint() 用给定的码点来产生包含单个字符的字符串。
+   *
+   * 注意，fromCodePoint方法定义在String对象上，而codePointAt方法定义在字符串的实例对象上。
+   */
+  {
+    log("String.fromCharCode(134071)", String.fromCharCode(134071)); // "ஷ"
+    log("String.fromCodePoint(134071)", String.fromCodePoint(134071)); // "𠮷"
+  }
+  _groupEnd();
 
-    _group("1.5 normalize() 方法");
-    /**
-     * 在排序或其它一些比较操作中，不同的字符可能会被认为是等同的。
-     * (1) 第一种是规范相等性（ canonical equivalence ），意味着两个码点序列在所有方面都被认为是可互换的。
-     *     例如，两个字符的组合可以按规范等同于另一个字符。
-     * (2) 第二种关联性是兼容性（ compatibility ），两个兼容的码点序列看起来有差别，但在特定条件下可互换使用。
-     */
+  _group("1.5 normalize() 方法");
+  /**
+   * 在排序或其它一些比较操作中，不同的字符可能会被认为是等同的。
+   * (1) 第一种是规范相等性（ canonical equivalence ），意味着两个码点序列在所有方面都被认为是可互换的。
+   *     例如，两个字符的组合可以按规范等同于另一个字符。
+   * (2) 第二种关联性是兼容性（ compatibility ），两个兼容的码点序列看起来有差别，但在特定条件下可互换使用。
+   */
 
-    /**
-     * normalize() :ES6 给字符串提供的支持 Unicode 标准形式的方法。
-     * @param: 单个可选的字符串参数，用于指示需要使用哪种 Unicode 标准形式。
-     *
-     * 当进行字符串比较时，必须将它们标准化为同一种形式。
-     *
-     * normalize方法目前不能识别三个或三个以上字符的合成。
-     */
-    let a = '\u01D1',b = '\u004F\u030C';
+  /**
+   * normalize() :ES6 给字符串提供的支持 Unicode 标准形式的方法。
+   * @param: 单个可选的字符串参数，用于指示需要使用哪种 Unicode 标准形式。
+   *
+   * 当进行字符串比较时，必须将它们标准化为同一种形式。
+   *
+   * normalize方法目前不能识别三个或三个以上字符的合成。
+   */
+  {
+    let a = '\u01D1',
+      b = '\u004F\u030C';
     log("'\u01D1' === '\u004F\u030C'", '\u01D1' === '\u004F\u030C'); //false
     log("'\u01D1'.normalize() === '\u004F\u030C'.normalize()", '\u01D1'.normalize() === '\u004F\u030C'.normalize()); //true
-    __groupEnd();
+  }
+  __groupEnd();
 
-    _group("1.6 正则表达式 u 标志");
-    //正则表达式假定单个字符使用一个 16 位的码元来表示。
-    // 为了解决这个问题， ES6 为正则表达式定义了用于处理 Unicode 的 u 标志。
+  _group("1.6 正则表达式 u 标志");
+  //正则表达式假定单个字符使用一个 16 位的码元来表示。
+  // 为了解决这个问题， ES6 为正则表达式定义了用于处理 Unicode 的 u 标志。
 
-    __group("1.6.1 u 标志实例")
-    //当一个正则表达式设置了 u 标志时，它的工作模式将切换到针对 字符 而非 码元。
-    var text3 = "𠮷";
-    log("text3",text3);
-    log("text3.length",text3.length);           // 2
-    log("/^.$/.test(text3)",/^.$/.test(text3));      // false
-    log("/^.$/u.test(text3)",/^.$/u.test(text3));     // true
-    __groupEnd();
+  __group("1.6.1 u 标志实例")
+  //当一个正则表达式设置了 u 标志时，它的工作模式将切换到针对 字符 而非 码元。
+  {
+    var text = "𠮷";
+    log("text", text);
+    log("text.length", text.length); // 2
+    log("/^.$/.test(text)", /^.$/.test(text)); // false
+    log("/^.$/u.test(text)", /^.$/u.test(text)); // true
+  }
+  __groupEnd();
 
-    __group("1.6.2 计算码点数量")
-    // ES6 并没有添加用于判断字符串包含多少个码点的方法，但借助 u 标志，可以使用正则表达式来进行计算
+  __group("1.6.2 计算码点数量")
+  // ES6 并没有添加用于判断字符串包含多少个码点的方法，但借助 u 标志，可以使用正则表达式来进行计算
+  {
     function codePointLength(text) {
-        var result = text.match(/[\s\S]/gu);
-        return result ? result.length : 0;
+      var result = text.match(/[\s\S]/gu);
+      return result ? result.length : 0;
     }
-    log("codePointLength('abc')",codePointLength("abc"));    // 3
-    log('codePointLength("𠮷bc")',codePointLength("𠮷bc"));   // 3
-    __groupEnd();
+    log("codePointLength('abc')", codePointLength("abc")); // 3
+    log('codePointLength("𠮷bc")', codePointLength("𠮷bc")); // 3
+  }
+  __groupEnd();
 
-    __group("1.6.3 判断是否支持 u 标志")
+  __group("1.6.3 判断是否支持 u 标志"); {
     function hasRegExpU() {
-        try {
-            var pattern = new RegExp(".", "u");
-            return true;
-        } catch (ex) {
-            return false;
-        }
+      try {
+        var pattern = new RegExp(".", "u");
+        return true;
+      } catch (ex) {
+        return false;
+      }
     }
-    log("hasRegExpU()",hasRegExpU()); //true
-    __groupEnd();
-    _groupEnd();
-    groupEnd();
+    log("hasRegExpU()", hasRegExpU()); //true
+  }
+  __groupEnd();
+  _groupEnd();
+  groupEnd();
 
-    group("2. 字符串的其他改动");
-    _group("2.1 识别子字符串的方法");
+  group("2. 字符串的其他改动");
+  _group("2.1 识别子字符串的方法"); {
     var msg = "Hello world!";
     log("var msg = 'Hello world!'");
     /**
@@ -135,9 +161,9 @@
      *          start(可选)  - 搜索起始位置索引
      * @return: 存在返回 true ，否则返回 false
      */
-    log('msg.includes("o")',msg.includes("o"));             // true
-    log('msg.includes("x")',msg.includes("x"));             // false
-    log('msg.includes("o", 8)',msg.includes("o", 8));       // false
+    log('msg.includes("o")', msg.includes("o")); // true
+    log('msg.includes("x")', msg.includes("x")); // false
+    log('msg.includes("o", 8)', msg.includes("o", 8)); // false
 
     /**
      * startsWith(text,start) 方法：判断给定文本是否出现在字符串起始处
@@ -145,9 +171,9 @@
      *          start(可选)  - 搜索起始位置索引
      * @return: 是则返回 true ，否则返回 false
      */
-    log('msg.startsWith("Hello")',msg.startsWith("Hello"));       // true
-    log('msg.startsWith("o")',msg.startsWith("o"));               // false
-    log('msg.startsWith("o", 4)',msg.startsWith("o", 4));         // true
+    log('msg.startsWith("Hello")', msg.startsWith("Hello")); // true
+    log('msg.startsWith("o")', msg.startsWith("o")); // false
+    log('msg.startsWith("o", 4)', msg.startsWith("o", 4)); // true
 
     /**
      * endsWith(text,n) 方法：判断给定文本是否出现在字符串结尾处
@@ -155,48 +181,53 @@
      *          n(可选)      - 搜索前n个字符
      * @return: 是则返回 true ，否则返回 false
      */
-    log('msg.endsWith("!")',msg.endsWith("!"));              // true
-    log('msg.endsWith("world!")',msg.endsWith("world!"));    // false
-    log('msg.endsWith("o", 5)',msg.endsWith("o", 5));        // true
-    log('msg.endsWith("o", 7)',msg.endsWith("o", 7));        // false
-    _groupEnd();
+    log('msg.endsWith("!")', msg.endsWith("!")); // true
+    log('msg.endsWith("world!")', msg.endsWith("world!")); // false
+    log('msg.endsWith("o", 5)', msg.endsWith("o", 5)); // true
+    log('msg.endsWith("o", 7)', msg.endsWith("o", 7)); // false
 
-    _group("2.2 repeat() 方法");
+  }
+
+  _groupEnd();
+
+  _group("2.2 repeat() 方法"); {
     /**
      * repeat( n ) 方法
      * @param: n - 字符串的重复次数
      * @return: 将初始字符串重复指定次数的新字符串
      */
-    log("x".repeat(3));         // "xxx"
-    log("hello".repeat(2));     // "hellohello"
-    log("abc".repeat(4));       // "abcabcabcabc"
+    log("x".repeat(3)); // "xxx"
+    log("hello".repeat(2)); // "hellohello"
+    log("abc".repeat(4)); // "abcabcabcabc"
     //参数如果是小数，会被取整。
-    log('na'.repeat(2.9));      // "nana"
-    _groupEnd();
+    log('na'.repeat(2.9)); // "nana"
+  }
+  _groupEnd();
 
-    groupEnd();
+  groupEnd();
 
-    group("3. 正则表达式的其他改动");
-    _group("3.1 正则表达式 y 标志：影响正则表达式搜索时的粘连（ sticky ）属性");
-    // y 标志：y 修饰符的作用与 g 修饰符类似，也是全局匹配，后一次匹配都从上一次匹配成功的下一个位置 lastIndex 开始。
-    // 如果在该位置没有匹配成功，那么正则表达式将停止检索。
-    // y 与 g 的不同之处在于，g 修饰符只要剩余位置中存在匹配就可，而 y 修饰符确保匹配必须从剩余的第一个位置开始
-    // y 修饰符号隐含了头部匹配的标志 ^
+  group("3. 正则表达式的其他改动");
+  _group("3.1 正则表达式 y 标志：影响正则表达式搜索时的粘连（ sticky ）属性");
+  // y 标志：y 修饰符的作用与 g 修饰符类似，也是全局匹配，后一次匹配都从上一次匹配成功的下一个位置 lastIndex 开始。
+  // 如果在该位置没有匹配成功，那么正则表达式将停止检索。
+  // y 与 g 的不同之处在于，g 修饰符只要剩余位置中存在匹配就可，而 y 修饰符确保匹配必须从剩余的第一个位置开始
+  // y 修饰符号隐含了头部匹配的标志 ^
+  {
     var text = "hello1 hello2 hello3",
-            pattern = /hello\d\s?/,
-            result = pattern.exec(text),
-            globalPattern = /hello\d\s?/g,
-            globalResult = globalPattern.exec(text),
-            stickyPattern = /hello\d\s?/y,
-            stickyResult = stickyPattern.exec(text);
+      pattern = /hello\d\s?/,
+      result = pattern.exec(text),
+      globalPattern = /hello\d\s?/g,
+      globalResult = globalPattern.exec(text),
+      stickyPattern = /hello\d\s?/y,
+      stickyResult = stickyPattern.exec(text);
 
-    log("/hello\\d\\s?/.exec('hello1 hello2 hello3')",result);         // "hello1 "
-    log("/hello\\d\\s?/g.exec('hello1 hello2 hello3')",globalResult);   // "hello1 "
-    log("/hello\\d\\s?/y.exec('hello1 hello2 hello3')",stickyResult);   // "hello1 "
+    log("/hello\\d\\s?/.exec('hello1 hello2 hello3')", result); // "hello1 "
+    log("/hello\\d\\s?/g.exec('hello1 hello2 hello3')", globalResult); // "hello1 "
+    log("/hello\\d\\s?/y.exec('hello1 hello2 hello3')", stickyResult); // "hello1 "
 
-    log("pattern.lastIndex",pattern.lastIndex)
-    log("globalPattern.lastIndex",globalPattern.lastIndex)
-    log("stickyPattern.lastIndex",stickyPattern.lastIndex)
+    log("pattern.lastIndex", pattern.lastIndex)
+    log("globalPattern.lastIndex", globalPattern.lastIndex)
+    log("stickyPattern.lastIndex", stickyPattern.lastIndex)
     log("将所有模式的 lastIndex = 1 ，结果：")
     pattern.lastIndex = 1;
     globalPattern.lastIndex = 1;
@@ -206,66 +237,70 @@
     globalResult = globalPattern.exec(text);
     stickyResult = stickyPattern.exec(text);
 
-//    log(result[0]);         // "hello1 "
-//    log(globalResult[0]);   // "hello2 "
+    //    log(result[0]);         // "hello1 "
+    //    log(globalResult[0]);   // "hello2 "
 
-    log("/hello\\d\\s?/.exec('hello1 hello2 hello3')",result);         // "hello1 "
-    log("/hello\\d\\s?/g.exec('hello1 hello2 hello3')",globalResult);   // "hello2 "
-    try{
-        log(stickyResult[0]);   // 错误！ stickyResult 的值为 null
-    }catch(e){
-        log(e);
+    log("/hello\\d\\s?/.exec('hello1 hello2 hello3')", result); // "hello1 "
+    log("/hello\\d\\s?/g.exec('hello1 hello2 hello3')", globalResult); // "hello2 "
+    try {
+      log(stickyResult[0]); // 错误！ stickyResult 的值为 null
+    } catch (e) {
+      log(e);
     }
 
     // 可以根据属性 sticky 来检测 y 标志是否存在。
-    log("stickyPattern.sticky",stickyPattern.sticky);
+    log("stickyPattern.sticky", stickyPattern.sticky);
 
     // 在旧版 JS 引擎中使用 y 标志会造成语法错误。你可以用如下方法来检测它是否被支持：
     function hasRegExpY() {
-        try {
-            var pattern = new RegExp(".", "y");
-            return true;
-        } catch (ex) {
-            return false;
-        }
+      try {
+        var pattern = new RegExp(".", "y");
+        return true;
+      } catch (ex) {
+        return false;
+      }
     }
-    log("hasRegExpY()",hasRegExpY());
-    _groupEnd();
+    log("hasRegExpY()", hasRegExpY());
+  }
+  _groupEnd();
 
-    _group("3.2 复制正则表达式");
+  _group("3.2 复制正则表达式"); {
+
     // 在 ES5 中，你可以将正则表达式传递给 RegExp 构造器来复制它
     var re1 = /ab/i,
-            re2 = new RegExp(re1);
+      re2 = new RegExp(re1);
 
     // 但如果你向 RegExp 构造器传递了第二个参数，即正则表达式的标志，那么该代码就无法工作
     var re1 = /ab/i,
-    // ES5 中会抛出错误, ES6 中可用
-    // 它会覆盖第一个参数中的标志。
-            re2 = new RegExp(re1, "g");
+      // ES5 中会抛出错误, ES6 中可用
+      // 它会覆盖第一个参数中的标志。
+      re2 = new RegExp(re1, "g");
 
-    _groupEnd();
+  }
+  _groupEnd();
 
-    _group("3.3 flags属性");
-    // 在 ES5 中，可以使用 source 属性来获取正则表达式的文本，
-    // 但若想获取标志字符串，必须解析 toString() 方法的输出
-    function getFlags(re) {
-        var text = re.toString();
-        log(re,".toString()",text);
-        return text.substring(text.lastIndexOf("/") + 1, text.length);
-    }
+  _group("3.3 flags属性");
+  // 在 ES5 中，可以使用 source 属性来获取正则表达式的文本，
+  // 但若想获取标志字符串，必须解析 toString() 方法的输出
+  function getFlags(re) {
+    var text = re.toString();
+    log(re, ".toString()", text);
+    return text.substring(text.lastIndexOf("/") + 1, text.length);
+  }
 
-    // toString() 的输出为 "/ab/g"
-    var re = /ab/g;
-    log("getFlags(/ab/g)",getFlags(re));          // "g"
+  // toString() 的输出为 "/ab/g"
+  var re = /ab/g;
+  log("getFlags(/ab/g)", getFlags(re)); // "g"
 
-    //ES6 后期加入的 flags 属性，会返回由正则表达式中所有标志组成的字符串。
-    var re = /ab/gi;
+  //ES6 后期加入的 flags 属性，会返回由正则表达式中所有标志组成的字符串。
+  var re = /ab/gi;
 
-    log(re,"source",re.source);     // "ab"
-    log(re,"flags",re.flags);      // "g"
+  log(re, "source", re.source); // "ab"
+  log(re, "flags", re.flags); // "g"
 
-    _groupEnd();
+  _groupEnd();
 
-    groupEnd();
+  groupEnd();
 </script>
+
 </html>
