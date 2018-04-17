@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>Map</title>
+  <link href="../style.css" rel="stylesheet">
+  <script src="../tools.js"></script>
+</head>
+
+<body>
+  <h1>Map</h1>
+  <ol>
+    <li>Map 则是键与相对应的值的集合。
+      <ul>
+        <li>Map 中的每个项都存储了两块数据，通过指定所需读取的键即可检索对应的值。</li>
+        <li>Map 常被用作缓存，存储数据以便此后快速检索。</li>
+      </ul>
+    </li>
+  </ol>
+</body>
+
+<script>
+  group("4. ES6 的 Map");
+  // ES6 的 Map 类型是键值对的   有序列表    ，而键和值都可以是任意类型。
+
+  // 键的比较使用的是 Object.is() ， 5 与 "5" 的类型不同
+
+  // Map 使用 new Map() 来创建。
+
+  _group("4.1 Map 的方法");
+
+  // 1. 调用 set() 方法并给它传递一个键与一个关联的值，来给 Map 添加项
+
+  // 2. 使用键名来调用 get() 方法便能提取对应的值。
+  {
+
+    let map = new Map();
+    let key1 = {},
+      key2 = {};
+
+    map.set("title", "Understanding ES6");
+    map.set("year", 2016);
+
+    console.log(map.get("title")); // "Understanding ES6"
+    console.log(map.get("year")); // 2016
+
+    // 可以将对象作为键
+    map.set(key1, 5);
+    map.set(key2, 42);
+
+    console.log(map.get(key1)); // 5
+    console.log(map.get(key2)); // 42
+
+    // 如果指定键不存在于 Map 中， 则 get() 方法就会返回特殊值 undefined 。
+    console.log(map.get('name'));
+
+  }
+
+  // 3. has(key) ：判断指定的键是否存在于 Map 中；
+  // 4. delete(key) ：移除 Map 中的键以及对应的值；
+  // 5. clear() ：移除 Map 中所有的键与值。
+  // 6. size 属性，用于指明包含了多少个键值对。
+  {
+
+    let map = new Map();
+    map.set("name", "Nicholas");
+    map.set("age", 25);
+
+    console.log(map.size); // 2
+
+    console.log(map.has("name")); // true
+    console.log(map.get("name")); // "Nicholas"
+
+    console.log(map.has("age")); // true
+    console.log(map.get("age")); // 25
+
+    map.delete("name");
+    console.log(map.has("name")); // false
+    console.log(map.get("name")); // undefined
+    console.log(map.size); // 1
+
+    map.clear();
+    console.log(map.has("name")); // false
+    console.log(map.get("name")); // undefined
+    console.log(map.has("age")); // false
+    console.log(map.get("age")); // undefined
+    console.log(map.size); // 0
+
+  }
+
+  _groupEnd();
+
+  _group("4.2 Map 的初始化");
+
+  // 将一个 二维数组 传递给 Map 构造器，以便使用数据来初始化一个 Map 。
+
+  // 数组中的每一项是数组，内部数组的首个项会作为键，第二项则为对应值。
+  {
+
+    let map = new Map([
+      ["name", "Nicholas"],
+      ["age", 25]
+    ]);
+
+    console.log(map.has("name")); // true
+    console.log(map.get("name")); // "Nicholas"
+
+    console.log(map.has("age")); // true
+    console.log(map.get("age")); // 25
+
+    console.log(map.size); // 2
+
+  }
+
+  _groupEnd();
+
+  _group("4.3 Map 上的 forEach 方法");
+  /**
+   * forEach( callback, thisValue ) 方法
+   *
+   * 回调函数 callback 接受三个参数：
+   * @param1: Map 中当前元素的值 value；
+   * @param2: Map 中当前元素的键 key；
+   * @param3: 目标 Map 自身。
+   *
+   * thisValue：（可选）传递给函数的值一般用 "this" 值。如果这个参数为空， "undefined" 会传递给 "this" 值
+   */
+  {
+
+    let map = new Map([
+      ["name", "Nicholas"],
+      ["age", 25]
+    ]);
+
+    map.forEach(function (value, key, ownerMap) {
+      console.log(key + " " + value);
+      console.log(ownerMap === map);
+    });
+
+    // name Nicholas
+    // true
+
+    // age 25
+    // true
+
+    // 传递给 forEach() 的回调函数接收了每个键值对，按照键值对被添加到 Map 中的顺序。
+
+  }
+
+  _groupEnd();
+
+  _group("4.4 Weak Map");
+
+  // 在 Weak Map 中，所有的 键 都必须是对象（尝试使用非对象的键会抛出错误），而且这些对象都是弱引用，不会干扰垃圾回收。
+  // 当 Weak Map 中的 键 在 Weak Map 之外不存在引用时，该键值对会被移除。
+
+  // 用处：在浏览器中创建一个关联到特定 DOM 元素的对象。
+  // 难点：如何判断一个 DOM 元素在网页中已不复存在，以便该库能移除此元素的关联对象。（Weak Map 可以解决）
+
+  // 注意：Weak Map 的键才是弱引用，而值不是。在 Weak Map 的值中存储对象，就算该对象的其他引用已全都被移除，也会阻止垃圾回收。
+
+  __group("4.4.1 使用 Weak Map");
+
+  // WeakMap 类型是键值对的无序列表，其中键必须是非 null 的对象，值则允许是任意类型。
+  {
+
+    let map = new WeakMap(),
+      element = document.querySelector(".element");
+
+    map.set(element, "Original");
+
+    let value = map.get(element);
+    console.log(value); // "Original"
+
+    // 移除元素
+    element.parentNode.removeChild(element);
+    element = null;
+
+    // 该 Weak Map 在此处为空
+
+  }
+
+  __groupEnd();
+
+  __group("4.4.2 Weak Map 的初始化");
+
+  // 把一个由数组构成的数组传递给 WeakMap 构造器。
+  {
+
+    let key1 = {},
+      key2 = {},
+      map = new WeakMap([
+        [key1, "Hello"],
+        [key2, 42]
+      ]);
+
+    console.log(map.has(key1)); // true
+    console.log(map.get(key1)); // "Hello"
+
+    console.log(map.has(key2)); // true
+    console.log(map.get(key2)); // 42
+
+    // 若任意键值对使用了 非对象 的键，构造器就会抛出错误。
+
+  }
+
+  __groupEnd();
+
+  __group("4.4.3 Weak Map 的方法");
+
+  /** Weak Map 只有两个附加方法能用来与键值对交互。
+   *
+   * 1. has() 方法用于判断指定的键是否存在于 Map 中
+   *
+   * 2. delete() 方法用于移除一个特定的键值对
+   */
+  {
+
+    let map = new WeakMap(),
+      element = document.querySelector(".element");
+
+    map.set(element, "Original");
+
+    console.log(map.has(element)); // true
+    console.log(map.get(element)); // "Original"
+
+    map.delete(element);
+
+    console.log(map.has(element)); // false
+    console.log(map.get(element)); // undefined
+
+  }
+
+  __groupEnd();
+
+  __group("4.4.4 对象的私有数据");
+  // Weak Map 的一个实际应用是    在对象实例中存储私有数据   。
+  {
+
+    // 此代码使用了公共约定的下划线来表示私有属性，以表明一个成员应当被认为是私有的，不应从对象实例外进行修改。
+
+    function Person(name) {
+      this._name = name;
+    }
+
+    Person.prototype.getName = function () {
+      return this._name;
+    };
+
+    // 然而，毫无办法阻止任何人写入 _name 属性，所以它依然能够被有意或无意地改写。
+
+  }
+
+  // 在 ES5 中能够创建几乎真正私有的数据，只要在创建对象时使用  IIFE ：
+  {
+
+    var Person = (function () {
+
+      var privateData = {},
+        privateId = 0;
+
+      function Person(name) {
+
+        Object.defineProperty(this, "_id", {
+          value: privateId++
+        });
+
+        privateData[this._id] = {
+          name: name
+        };
+      }
+
+      Person.prototype.getName = function () {
+        return privateData[this._id].name;
+      };
+
+      return Person;
+
+    }());
+
+    // 此方式的最大问题在于 privateData 中的数据永不会消失。
+    // 因为在对象实例被销毁时没有任何方法可以获知该数据， privateData 对象就将永远包含多余的数据。
+
+  }
+
+  // 改用 Weak Map 创建私有的数据
+  {
+
+    let Person = (function () {
+
+      let privateData = new WeakMap();
+
+      function Person(name) {
+
+        privateData.set(this, {
+          name: name
+        });
+      }
+
+      Person.prototype.getName = function () {
+        return privateData.get(this).name;
+      };
+
+      return Person;
+
+    }());
+
+  }
+
+  __groupEnd();
+
+  _groupEnd();
+
+  groupEnd();
+</script>
+
+</html>

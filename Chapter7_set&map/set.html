@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>Set</title>
+  <link href="../style.css" rel="stylesheet">
+  <script src="../tools.js"></script>
+</head>
+
+<body>
+  <h1>Set</h1>
+  <ol>
+    <li>Set 是不包含重复值的列表。
+      <ul>
+        <li>常见的操作是在 Set 中检查某个值是否存在。</li>
+      </ul>
+    </li>
+  </ol>
+</body>
+
+<script>
+  group("3. ES6 的 Set");
+
+  // ES6 新增了 Set 类型，这是一种无重复值的有序列表。
+  // 允许对 Set 包含的数据进行快速访问，从而能更有效地追踪离散值。
+
+  _group("3.1 创建 Set 并添加项目");
+  // Set 使用 new Set() 来创建。
+  // 调用 add() 方法就能向 Set 中添加项目，检查 size 属性还能查看其中包含有多少项
+  {
+
+    let set = new Set();
+
+    let key1 = {},
+      key2 = {};
+
+    // Set 不会使用强制类型转换来判断值是否重复。
+    set.add(5);
+    set.add("5");
+    set.add(key1);
+    set.add(key2);
+
+    // 如果 add() 方法用相同值进行了多次调用，那么在第一次之后的调用实际上会被忽略：
+    set.add(5); // 重复了，该调用被忽略
+
+    console.log(set.size);
+    console.log(set);
+
+  }
+
+  // 可以使用 数组 来初始化一个 Set ，并且 Set 构造器会确保不重复地使用这些值。
+  {
+
+    let set = new Set([1, 2, 3, 4, 5, 5, 5, 5]);
+
+    console.log(set.size); // 5
+
+  }
+
+  // 可以使用 has() 方法来测试某个值是否存在于 Set 中
+  {
+
+    let set = new Set();
+    set.add(5);
+    set.add("5");
+
+    console.log(set.has(5)); // true
+    console.log(set.has(6)); // false
+
+  }
+
+  _groupEnd();
+
+  _group("3.2 移除值");
+
+  // 1. 使用 delete() 方法可移除单个值，
+  // 2. 使用 clear() 方法可清除 Set 中所有值。
+  {
+
+    let set = new Set();
+    set.add(5);
+    set.add("5");
+
+    console.log(set.has(5)); // true
+
+    set.delete(5);
+
+    console.log(set.has(5)); // false
+    console.log(set.size); // 1
+
+    set.clear();
+
+    console.log(set.has("5")); // false
+    console.log(set.size); // 0
+
+  }
+
+  _groupEnd();
+
+  _group("3.3 Set 上的 forEach() 方法");
+  /**
+   * forEach( callback, thisValue ) 方法
+   *
+   * 回调函数 callback 接受三个参数：
+   * @param1: Set 中当前元素；
+   * @param2: Set 中当前元素；
+   * @param3: 目标 Set 自身。
+   *
+   * thisValue：（可选）传递给函数的值一般用 "this" 值。如果这个参数为空， "undefined" 会传递给 "this" 值
+   */
+
+  // Set 版本的 forEach() 方法与数组版本有个奇怪差异：
+  // Set 传给回调函数的前两个参数是相同的。
+  {
+
+    let set = new Set();
+    set.add("5");
+    set.add("String");
+
+    set.forEach(function (curr, index, set) {
+      console.log(curr, index, set);
+    });
+    // 输出：
+    // 5 5 Set { '5', 'String' }
+    // String String Set { '5', 'String' }
+
+  }
+
+  // 如果想在回调函数中使用 this ，给 forEach() 传入一个 this 值作为第二个参数：
+  {
+
+    let set = new Set([1, 2]);
+
+    let processor = {
+      output(value) {
+        console.log(value);
+      },
+      // process(dataSet) {
+      //   dataSet.forEach(function (value) {
+      //     this.output(value);
+      //   }, this);
+      // }
+      // 也可以写成
+      process(dataSet) {
+        dataSet.forEach(value => this.output(value));
+      }
+    };
+
+    processor.process(set);
+
+  }
+
+  _groupEnd();
+
+  _group("3.4 将 Set 转换为数组");
+
+  // Set 无法像数组那样用索引来直接访问某个值
+
+  // 数组转换为 Set ：将数组传递给 Set 构造器。
+  // Set 转换为数组：用扩展运算符(...)将数组中的项分割开并作为函数的分离参数。
+  {
+
+    let set = new Set([1, 2, 3, 3, 3, 4, 5]),
+      array = [...set];
+
+    console.log(array); // [1,2,3,4,5]
+
+  }
+
+  // 功能：已存在一个数组，但是想创建一个无重复值的新数组
+  {
+
+    function eliminateDuplicates(items) {
+
+      // Set 只是一个临时的中介物，以便在创建一个无重复的数组之前过滤重复值。
+      return [...new Set(items)];
+    }
+
+    let numbers = [1, 2, 3, 3, 3, 4, 5],
+      noDuplicates = eliminateDuplicates(numbers);
+
+    console.log(noDuplicates); // [1,2,3,4,5]
+
+  }
+
+  _groupEnd();
+
+  _group("3.5 Weak Set");
+
+  // Set 类型存储对象引用的方式，它也可以被称为 Strong Set （强引用的 Set ）。
+
+  // 对象存储在 Set 的一个实例中，相当于存储在变量中。
+
+  // 只要对于 Set 实例的引用仍然存在，所存储的对象就无法被垃圾回收机制回收，从而无法释放内存。
+  {
+
+    let set = new Set(),
+      key = {
+        a: 'a'
+      };
+
+    set.add(key);
+    console.log(set.size); // 1
+
+    // 取消原始引用
+    key = null;
+
+    console.log(set.size); // 1
+
+    // 重新获得原始引用
+    key = [...set][0]; //{ a: 'a' }
+
+  }
+
+  // 例如，当 JS 代码在网页中运行并保持了与 DOM 元素的联系，
+  // 该元素可能被其他脚本移除，但是代码中仍然保留对该 DOM 元素的最后一个引用（这种情况被称为内存泄漏）。
+
+  // ES6 引入了 Weak Set
+  // 该类型只允许存储 对象弱引用，而不能 存储基本类型的值。对象的弱引用在它自己成为该对象的唯一引用时，不会阻止垃圾回收。
+
+  // 注意：WeakSet 构造器不接受基本类型的值。
+
+  __group("3.5.1 创建 Weak Set");
+
+  // Weak Set 使用 WeakSet 构造器来创建
+  // 有三个方法：add() 方法、 has() 方法以及 delete() 方法。
+  {
+
+    let set = new WeakSet(),
+      key = {
+        a: 'a'
+      };
+
+    // 将对象加入 set
+    set.add(key);
+
+    console.log(set.has(key)); // true
+
+    // set.delete(key);
+    // or
+    key = null;
+
+    console.log(set.has(key)); // false
+
+  }
+
+  // 可以给构造器传入一个可迭代对象来初始化 Weak Set 的值
+  {
+
+    let key1 = {},
+      key2 = {},
+      set = new WeakSet([key1, key2]);
+
+    console.log(set.has(key1)); // true
+    console.log(set.has(key2)); // true
+
+  }
+
+  __groupEnd();
+
+  __group("3.5.2 Set 类型之间的关键差异");
+
+  // Weak Set 与正规 Set 之间最大的区别是对象的弱引用。
+  {
+
+    let set = new WeakSet(),
+      key = {};
+
+    // 将对象加入 set
+    set.add(key);
+
+    console.log(set.has(key)); // true
+
+    // 移除对于键的最后一个强引用，同时从 Weak Set 中移除
+    key = null;
+
+  }
+
+  // 一些关键的差异：
+  /**
+   * 1. 对于 WeakSet 的实例，若调用 add() 方法时传入了非对象的参数，就会抛出错误，
+   *    has() 或 delete() 则会在传入了非对象的参数时返回 false ；
+   *
+   * 2. Weak Set 不可迭代，因此不能被用于 for-of 循环；
+   *
+   * 3. Weak Set 无法暴露出任何迭代器（例如 keys() 与 values() 方法），因此没有任何编程手段可用于判断 Weak Set 的内容；
+   *    console.log(weakset) 打印出来会为空，即使里面有内容
+   *
+   * 4. Weak Set 没有 forEach() 方法；
+   *
+   * 5. Weak Set 没有 size 属性。
+   *
+  */
+
+  __groupEnd();
+
+  _groupEnd();
+
+  groupEnd();
+</script>
+
+</html>

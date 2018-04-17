@@ -1,152 +1,181 @@
 <!DOCTYPE html>
 <html>
+
 <head lang="en">
-    <meta charset="UTF-8">
-    <title>函数(2)</title>
-    <link href="../style.css" rel="stylesheet">
-    <script src="../tools.js"></script>
+  <meta charset="UTF-8">
+  <title>函数(2)</title>
+  <link href="../style.css" rel="stylesheet">
+  <script src="../tools.js"></script>
 </head>
+
 <body>
-<h1>函数(2)</h1>
+  <h1>函数(2)</h1>
 </body>
 <script>
-    group("5. ES6 的名称属性");
-    _group("5.1 选择合适的名称");
-    /**
-     * ES6 中所有函数都有适当的 name 属性值。
-     */
-    function doSomething1() {
-    }
-    var doAnotherThing1 = function() {
+  group("5. ES6 的名称属性");
+  _group("5.1 选择合适的名称");
+  /**
+   * ES6 中所有函数都有适当的 name 属性值。
+   */
+  {
+
+    function doSomething() {}
+    var doAnotherThing = function () {};
+    log("doSomething.name =", doSomething.name); // "doSomething1"
+    log("doAnotherThing.name =", doAnotherThing.name); // "doAnotherThing1"
+  }
+  // 匿名函数的名称属性在 FireFox 与 Edge 中仍然不被支持，值为空字符串，而 Chrome 直到 51.0 版本才提供了该特性。
+
+  _groupEnd();
+
+  _group("5.2 名称属性的特殊情况");
+
+  // 虽然函数声明与函数表达式的名称易于确定，但 ES6 还做了更多规定以确保所有函数都拥有合适的名称
+  {
+
+    var doSomething = function doSomethingElse() {
+      // doSomething.name 的值是 "doSomethingElse" ，
+      // 因为该函数表达式自己拥有一个名称，并且此名称的优先级要高于赋值目标的变量名。
     };
 
-    console.log("doSomethin1g.name =",doSomething1.name);          // "doSomething1"
-    console.log("doAnotherThing1.name =",doAnotherThing1.name);       // "doAnotherThing1"
 
-    // 匿名函数的名称属性在 FireFox 与 Edge 中仍然不被支持，值为空字符串，而 Chrome 直到 51.0 版本才提供了该特性。
-    _groupEnd();
+    log("doSomething.name", doSomething.name); // "doSomething2Else"
+  }
 
-    _group("5.2 名称属性的特殊情况");
-    // 虽然函数声明与函数表达式的名称易于确定，但 ES6 还做了更多规定以确保所有函数都拥有合适的名称
-    var doSomething2 = function doSomething2Else() {
-        // doSomething2.name 的值是 "doSomething2Else" ，
-        // 因为该函数表达式自己拥有一个名称，并且此名称的优先级要高于赋值目标的变量名。
-    };
+  // 特殊情况
+  {
 
     var person = {
-        get firstName() {
-            return "Nicholas"
-        },
-        sayName: function() {
-            console.log(this.name);
-        }
+      get firstName() {
+        return "Nicholas"
+      },
+      sayName: function () {
+        log(this.name);
+      }
     }
-
-    console.log("doSomething2.name",doSomething2.name);      // "doSomething2Else"
-    console.log("person.sayName.name",person.sayName.name);   // "sayName"
+    log("person.sayName.name", person.sayName.name); // "sayName"
 
     var descriptor = Object.getOwnPropertyDescriptor(person, "firstName");
     // 特殊情况1：person.firstName 实际是个 getter 函数，因此它的名称是 "get firstName" ，以标明它的特征；
-    console.log("特殊情况1：","descriptor.get.name =",descriptor.get.name); // "get firstName"
+    log("特殊情况1：", "descriptor.get.name =", descriptor.get.name); // "get firstName"
 
     //特殊情况2：使用 bind() 创建的函数会在名称属性值之前带有 "bound" 前缀。
-    var doSomething3 = function() {
-        // ...
+    var doSomething = function () {
+      // ...
     };
-    console.log("特殊情况2：","doSomething3.bind().name =",doSomething3.bind().name);   // "bound doSomething3"
+    log("特殊情况2：", "doSomething.bind().name =", doSomething.bind().name); // "bound doSomething"
 
     //特殊情况3：使用 Function 构造器创建的函数，其名称属性为 "anonymous"。
-    console.log("特殊情况3：","(new Function()).name =",(new Function()).name);     // "anonymous"
-    _groupEnd();
+    log("特殊情况3：", "(new Function()).name =", (new Function()).name); // "anonymous"
 
-    groupEnd();
+  }
+  _groupEnd();
 
-    group("6. 明确函数的双重用途");
-    _group("6.1 在 ES5 中判断函数如何被调用");
-    /**
-     * 在 ES5 以及更早版本中，函数根据是否使用 new 去调用而有双重用途。
-     * 当使用 new 时，函数内部的 this 是一个新对象，并作为函数的返回值
-     */
-    function Person1(name) {
-        this.name = name;
+  groupEnd();
+
+  group("6. 明确函数的双重用途");
+
+  _group("6.1 在 ES5 中判断函数如何被调用");
+
+  /**
+   * 在 ES5 以及更早版本中，函数根据是否使用 new 去调用而有双重用途。
+   * 当使用 new 时，函数内部的 this 是一个新对象，并作为函数的返回值
+   */
+  {
+
+    function Person(name) {
+      this.name = name;
     }
-    var person1 = new Person1("Nicholas");
-    var notAPerson1 = Person1("Nicholas");
+    var person = new Person("Nicholas");
+    var notAPerson = Person("Nicholas");
 
-    console.log(person1);        // "[Object object]"
-    console.log(notAPerson1);    // "undefined"
+    log(person); // "[Object object]"
+    log(notAPerson); // "undefined"
+  }
 
-    //在 ES5 中判断是否使用了 new 去调用函数（即作为构造器），最流行的方式是使用 instanceof
-    function Person2(name) {
-        if (this instanceof Person2) {
-            this.name = name;   // 使用 new
-        } else {
-            try{
-                throw new Error("You must use new with Person.")
-            }catch(e){
-                log(e);
-            }
+  //在 ES5 中判断是否使用了 new 去调用函数（即作为构造器），最流行的方式是使用 instanceof
+  {
+
+    function Person(name) {
+      if (this instanceof Person) {
+        this.name = name; // 使用 new
+      } else {
+        try {
+          throw new Error("You must use new with Person.")
+        } catch (e) {
+          log(e);
         }
+      }
     }
 
-    var person2 = new Person2("Nicholas");
-    var notAPerson2 = Person2("Nicholas");  // 抛出错误
+    var person = new Person("Nicholas");
+    var notAPerson1 = Person("Nicholas"); // 抛出错误
 
     // 该方法并不绝对可靠，因为有时未使用 new 但 this 仍然可能是 Person 的实例
     // 调用 Person.call() 并将 person 变量作为第一个参数传入，这意味着将 Person 内部的 this 被设置为了 person
     // 对于该函数来说，没任何办法能将这种方式与使用 new 调用区分开来。
-    var notAPerson3 = Person2.call(person2, "Michael");    //未报错
-    _groupEnd();
+    var notAPerson2 = Person.call(person, "Michael"); //未报错
+  }
 
-    _group("6.2 new.target 元属性");
-    // 元属性指的是“非对象”（例如 new 运算符）上的属性，并提供关联目标的附加信息。
-    /**
-     * new.target 元属性
-     * 当函数的 [[Construct]] 方法被调用时， new 运算符的作用目标会填入 new.target 元属性，
-     * 此时函数体内部的 this 值是新创建的对象实例，而 new.target 的值正是该实例的构造器。
-     * 而若 [[Call]] 被执行， new.target 的值将会是 undefined 。
-     */
-    // 方法一：通过检查 new.target 这个新的元属性是否被定义，就能让你安全地判断函数被调用时是否使用了 new 。
-    function Person3(name) {
-        if (typeof new.target !== "undefined") {
-            this.name = name;   // 使用 new
-        } else {
-            try{
-                throw new Error("You must use new with Person.")
-            }catch(e){
-                log(e);
-            }
+  _groupEnd();
+
+  _group("6.2 new.target 元属性");
+  // 元属性指的是“非对象”（例如 new 运算符）上的属性，并提供关联目标的附加信息。
+
+  /**
+   * new.target 元属性
+   * 当函数的 [[Construct]] 方法被调用时， new 运算符的作用目标会填入 new.target 元属性，
+   * 此时函数体内部的 this 值是新创建的对象实例，而 new.target 的值正是该实例的构造器。
+   * 而若 [[Call]] 被执行， new.target 的值将会是 undefined 。
+   */
+
+  // 方法一：通过检查 new.target 这个新的元属性是否被定义，就能让你安全地判断函数被调用时是否使用了 new 。
+  {
+    function Person(name) {
+      if (typeof new.target !== "undefined") {
+        this.name = name; // 使用 new
+      } else {
+        try {
+          throw new Error("You must use new with Person.")
+        } catch (e) {
+          log(e);
         }
+      }
     }
-    var person3 = new Person3("Nicholas");
-    var notAPerson = Person3.call(person, "Michael");    // 出错！
+    var person = new Person("Nicholas");
+    var notAPerson = Person.call(person, "Michael"); // 出错！
+  }
 
-    // 方法二：也可以检查 new.target 来判断是否使用特定构造器进行了调用。
-    function Person4(name) {
-        if (new.target === Person4) {
-            this.name = name;   // 使用 new
-        } else {
-            try{
-                throw new Error("You must use new with Person.")
-            }catch(e){
-                log(e);
-            }
+  // 方法二：也可以检查 new.target 来判断是否使用特定构造器进行了调用。
+  {
+    function Person(name) {
+      if (new.target === Person) {
+        this.name = name; // 使用 new
+      } else {
+        try {
+          throw new Error("You must use new with Person.")
+        } catch (e) {
+          log(e);
         }
+      }
     }
 
-    function AnotherPerson4(name) {
-        Person4.call(this, name);
+    function AnotherPerson(name) {
+      Person.call(this, name);
     }
 
-    var person4 = new Person4("Nicholas");
-    var anotherPerson4 = new AnotherPerson4("Nicholas");  // 出错！
+    var person = new Person("Nicholas");
+    var anotherPerson = new AnotherPerson("Nicholas"); // 出错！
 
-    // 警告：在函数之外使用 new.target 会导致语法错误。
-    _groupEnd();
-    groupEnd();
+  }
 
+  // 警告：在函数之外使用 new.target 会导致语法错误。
 
-    groupEnd();
+  _groupEnd();
 
+  groupEnd();
+
+  groupEnd();
 </script>
+
 </html>

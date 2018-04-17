@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+  <meta charset="UTF-8">
+  <title> 解构：更方便的数据访问 </title>
+  <link href="../style.css" rel="stylesheet">
+  <script src="../tools.js"></script>
+</head>
+
+<body>
+  <h1> 解构：更方便的数据访问 </h1>
+  <h3>注意：</h3>
+  <ol>
+    <li>解构在右侧的值为 null 或 undefined 时会抛出错误</li>
+  </ol>
+</body>
+<script>
+  group("1. 解构为何有用？");
+
+  /**
+   * 在 ES5 及更早版本中，从对象或数组中获取信息，并将特定数据存入本地变量，需要书写许多相似的代码。
+   */
+  {
+    let options = {
+      repeat: true,
+      save: false
+    };
+
+    // 从对象中提取数据
+    let repeat = options.repeat,
+      save = options.save;
+  }
+
+  groupEnd();
+
+  group("2. 对象解构");
+  // 对象解构语法在赋值语句的左侧使用了对象字面量
+
+  // 1. 变量声明时使用解构赋值
+  {
+
+    let node = {
+      type: "Identifier",
+      name: "foo"
+    };
+
+    let { type, name } = node;
+
+    console.log(type); // "Identifier"
+    console.log(name); // "foo"
+
+  }
+
+  // 切勿遗忘初始化器
+  {
+
+    // 当使用解构配合 var 、 let 或 const 来声明变量时，必须提供初始化器（即等号右边的值）。
+
+    // 语法错误！
+    // var { type, name };
+
+    // 语法错误！
+    // let { type, name };
+
+    // 语法错误！
+    // const { type, name };
+  }
+
+  _group("2.1 解构赋值");
+
+  // 2. 在赋值的时候使用解构。
+  {
+
+    let node = {
+        type: "Identifier",
+        name: "foo"
+      },
+      type = "Literal",
+      name = 5;
+
+    // 使用解构来分配不同的值
+    ({ type, name } = node);
+
+    // 注意：必须用圆括号包裹解构赋值语句
+
+    // 原因：因为暴露的花括号会被解析为代码块语句，而块语句不允许在赋值操作符（即等号）左侧出现。
+    // 圆括号标示了内部的花括号并不是块语句、而应该被解释为表达式，从而完成赋值操作。
+
+    console.log(type); // "Identifier"
+    console.log(name); // "foo"
+
+  }
+
+  // 解构赋值表达式的值为表达式  右侧（在 = 之后）  的值。
+  {
+
+    //传递值给函数：
+    let node = {
+        type: "Identifier",
+        name: "foo"
+      },
+      type = "Literal",
+      name = 5;
+
+    function outputInfo(value) {
+      console.log(value === node); // true
+    }
+
+    outputInfo(({ type, name } = node));
+
+    console.log(type); // "Identifier"
+    console.log(name); // "foo"
+
+  }
+
+  _groupEnd();
+
+  _group("2.2 默认值");
+  // 如果所指定的本地变量在对象中没有找到同名属性，那么该变量会被赋值为 undefined
+  {
+    let node = {
+      type: "Identifier",
+      name: "foo"
+    };
+
+    let { type, name, value } = node;
+
+    console.log(type); // "Identifier"
+    console.log(name); // "foo"
+    console.log(value); // undefined
+
+  }
+
+  // 可以选择性地定义一个默认值，以便在指定属性不存在时使用该值。
+  // 在属性名后面添加一个等号并指定默认值。
+  {
+    let node = {
+      type: "Identifier",
+      name: "foo"
+    };
+
+    let { type, name, value = true } = node;
+
+    console.log(type); // "Identifier"
+    console.log(name); // "foo"
+    console.log(value); // true
+  }
+
+  _groupEnd();
+
+  _group("2.3 赋值给非同名本地变量");
+
+  // ES6 有一个扩展语法，
+  // 可以在给本地变量赋值时使用一个不同的名称，
+  // 该语法看上去就像是使用 对象字面量 的 非简写 的 属性初始化。
+  {
+    let node = {
+      type: 'Identifier',
+      name: 'foo'
+    };
+
+    let { type: localType, name: localName } = node;
+    // type: localType 这种语法表示欲读取名为 type 的属性，并将它的值存储在变量 localType 上。
+
+    console.log(localType); // "Identifier"
+    console.log(localName); // "foo"
+  }
+
+  // 可以给变量别名添加默认值，在本地变量名称后添加等号与默认值。
+  {
+    let node = {
+        type: "Identifier"
+    };
+
+    let { type: localType, name: localName = "bar" } = node;
+
+    console.log(localType);     // "Identifier"
+    console.log(localName);     // "bar"
+  }
+
+  _groupEnd();
+
+  _group("2.4 嵌套的对象解构");
+  // 使用类似于对象字面量的语法，可以深入到嵌套的对象结构中去提取所需数据。
+  {
+
+    let node = {
+      type: "Identifier",
+      name: "foo",
+      loc: {
+          start: {
+              line: 1,
+              column: 1
+          },
+          end: {
+              line: 1,
+              column: 4
+          }
+      }
+    };
+
+    // 当有一个冒号在解构模式中出现，就意味着冒号之前的标识符代表需要检查的位置，而冒号右侧则是赋值的目标。
+
+    // 当冒号右侧存在花括号时，表示目标被嵌套在对象的更深层次中。
+
+    let { loc: { start }} = node;
+
+    console.log(start.line);        // 1
+    console.log(start.column);      // 1
+  }
+
+  // 在对象的嵌套解构中同样能为本地变量使用不同的名称：
+  {
+
+    let node = {
+      type: "Identifier",
+      name: "foo",
+      loc: {
+          start: {
+              line: 1,
+              column: 1
+          },
+          end: {
+              line: 1,
+              column: 4
+          }
+      }
+    };
+
+    // 提取 node.loc.start
+    let { loc: { start: localStart }} = node;
+
+    console.log(localStart.line);   // 1
+    console.log(localStart.column); // 1
+
+  }
+
+  _groupEnd();
+
+  groupEnd();
+
+  group("3. 数组解构");
+
+  // 1. 变量声明时使用解构赋值
+
+  // 数组解构时，解构作用在数组内部的  位置  上，而不是作用在对象的属性名上
+  {
+
+    let colors = [ "red", "green", "blue" ];
+
+    let [ firstColor, secondColor ] = colors;
+
+    console.log(firstColor);        // "red"
+    console.log(secondColor);       // "green"
+
+  }
+
+  // 可以在解构模式中忽略一些项，只给所需的项提供变量名。
+  {
+
+    let colors = [ "red", "green", "blue" ];
+
+    let [ , , thirdColor ] = colors;
+
+    console.log(thirdColor);        // "blue"
+
+  }
+
+  _group("3.1 解构赋值");
+
+  // 2. 在赋值的时候使用解构。
+  {
+
+    let colors = [ "red", "green", "blue" ],
+      firstColor = "black",
+      secondColor = "purple";
+
+    [ firstColor, secondColor ] = colors;
+
+    console.log(firstColor);        // "red"
+    console.log(secondColor);       // "green"
+
+  }
+
+  // 在 ES5 中需要使用第三个变量作为临时变量
+  {
+    // 在 ES5 中互换值
+    let a = 1,
+        b = 2,
+        tmp;
+
+    tmp = a;
+    a = b;
+    b = tmp;
+
+    console.log(a);     // 2
+    console.log(b);     // 1
+
+  }
+
+  // 使用数组解构赋值，能轻易地互换两个变量的值。
+  {
+    // 在 ES6 中互换值
+    let a = 1,
+        b = 2;
+
+    [ a, b ] = [ b, a ];
+
+    console.log(a);     // 2
+    console.log(b);     // 1
+
+  }
+
+  _groupEnd();
+
+  _group("3.2 默认值");
+
+  // 当指定位置的项不存在、或其值为 undefined ，那么该默认值就会被使用。
+  {
+    let colors = [ "red" ];
+
+    let [ firstColor, secondColor = "green" ] = colors;
+
+    console.log(firstColor);        // "red"
+    console.log(secondColor);       // "green"
+  }
+
+  _groupEnd();
+
+  _group("3.3 嵌套的解构");
+
+  // 在整个解构模式中插入另一个数组模式，解构操作就会下探到嵌套的数组中
+  {
+    let colors = [ "red", [ "green", "lightgreen" ], "blue" ];
+
+    // 随后
+
+    let [ firstColor, [ secondColor ] ] = colors;
+
+    console.log(firstColor);        // "red"
+    console.log(secondColor);       // "green"
+  }
+
+  _groupEnd();
+
+  _group("3.4 剩余项");
+
+  // 1. 解构时取出特定项之余保留剩余的值
+  {
+
+    let colors = [ "red", "green", "blue" ];
+
+    let [ firstColor, ...restColors ] = colors;
+
+    console.log(firstColor);        // "red"
+
+    console.log(restColors.length); // 2
+    console.log(restColors[0]);     // "green"
+    console.log(restColors[1]);     // "blue"
+
+  }
+
+  // 2. 可以很方便的克隆数组
+
+  // 在 ES5 中克隆数组
+  {
+    var colors = [ "red", "green", "blue" ];
+    var clonedColors = colors.concat();
+
+    console.log(clonedColors);      //"[red,green,blue]"
+  }
+
+  // 在 ES6 中克隆数组
+  {
+    let colors = [ "red", "green", "blue" ];
+    let [ ...clonedColors ] = colors;
+
+    console.log(clonedColors);      //"[red,green,blue]"
+  }
+
+  _groupEnd();
+
+  groupEnd();
+
+  group("4. 混合解构");
+  // 对象与数组解构能被组合使用，以创建更复杂的解构表达式。
+  {
+    let node = {
+      type: "Identifier",
+      name: "foo",
+      loc: {
+          start: {
+              line: 1,
+              column: 1
+          },
+          end: {
+              line: 1,
+              column: 4
+          }
+      },
+      range: [0, 3]
+    };
+
+    let {
+        loc: { start },
+        range: [ startIndex ]
+    } = node;
+
+    console.log(start.line);        // 1
+    console.log(start.column);      // 1
+    console.log(startIndex);        // 0
+  }
+
+  groupEnd();
+
+  group("5. 参数解构");
+
+  // 当 JS 的函数接收大量可选参数时，一种常用模式是创建一个包含附加参数的 options 对象
+  {
+
+    // options 上的属性表示附加参数
+    function setCookie(name, value, options) {
+      options = options || {};
+
+      let secure = options.secure,
+        path = options.path,
+        domain = options.domain,
+        expires = options.expires;
+
+      // 设置 cookie 的代码
+    }
+
+    // 第三个参数映射到 options
+    setCookie('type', 'js', {
+      secure: true,
+      expires: 60000
+    });
+
+  }
+
+  // 参数解构提供了更清楚标明函数期望输入的替代方案。
+  // 它使用对象或数组解构的模式替代了具名参数。
+  {
+    function setCookie(name, value, { secure, path, domain, expires }) {
+      // 设置 cookie 的代码
+    }
+
+    setCookie('type', 'js', {
+      secure: true,
+      expires: 60000
+    });
+
+  }
+
+  _group("5.1 解构参数不可缺失");
+
+  // 参数解构有一个怪异之处，在默认情况下，调用函数时未给参数解构传值会抛出错误。
+  {
+    // 用以下方式调用上例中的 setCookie() 函数就会出错：
+
+    // setCookie("type", "js");
+
+    // 调用时第三个参数缺失了，它的值就变成了 undefined 。这导致了一个错误，因为参数解构实际上只是解构声明的简写。
+
+    // 当 setCookie() 函数被调用时， JS 引擎实际上是这么做的：
+    function setCookie(name, value, options) {
+
+      let { secure, path, domain, expires } = options;
+
+      // 设置 cookie 的代码
+    }
+
+  }
+
+  // 若期望参数解构是可选的，就需要给解构的参数提供默认值来解决问题
+  {
+
+    function setCookie(name, value, { secure, path, domain, expires } = {}) {
+
+      // ...
+    }
+
+  }
+
+  _groupEnd();
+
+  _group("5.2 参数解构的默认值");
+
+  // 可以为参数解构提供可解构的默认值，只需在其中每个参数后面添加等号并指定默认值。
+  {
+    function setCookie(name, value,
+        {
+            secure = false,
+            path = "/",
+            domain = "example.com",
+            expires = new Date(Date.now() + 360000000)
+        } = {}
+    ) {
+
+        // ...
+    }
+
+    // 可以避免检查指定属性是否已被传入。
+
+    // 并且整个解构的参数有一个默认值，即一个空对象，令该参数成为可选参数。
+  }
+
+  _groupEnd();
+
+  groupEnd();
+</script>
+
+</html>

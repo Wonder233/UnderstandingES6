@@ -11,14 +11,18 @@
 </body>
 <script>
     group("1. 创建数组");
+
     /**
      * 在 ES6 之前创建数组主要存在两种方式： Array 构造器与数组字面量写法。
      * 这两种方式都需要将数组的项分别列出，并且还要受到其他限制。
      * 将“类数组对象”（即：拥有数值类型索引与长度属性的对象）转换为数组也并不自由，经常需要书写额外的代码。
      */
+
     _group("1.1 Array.of() 方法");
+
     // 调用 new Array() 构造器时，根据传入参数的类型与数量的不同，实际上会导致一些不同的结果。
     {
+
         // 使用单个数值参数来调用 Array 构造器时，数组的长度属性会被设置为该参数
         let items = new Array(2);
         console.log(items.length);          // 2
@@ -40,10 +44,13 @@
         console.log(items.length);          // 2
         console.log(items[0]);              // 3
         console.log(items[1]);              // "2"
+
     }
+
     // ES6 引入了 Array.of() 方法来解决这个问题。
     // Array.of() 方法总会创建一个包含所有传入参数的数组，而不管参数的数量与类型。
     {
+
         // 使用多个参数（无论是否为数值类型）
         let items = Array.of(1, 2);
         console.log(items.length);          // 2
@@ -59,13 +66,18 @@
         items = Array.of("2");
         console.log(items.length);          // 1
         console.log(items[0]);              // "2"
+
     }
+
     _groupEnd();
 
     _group("1.2 Array.from() 方法");
+
     // 在 JS 中将非数组对象转换为真正的数组总是很麻烦。
+
     // 例如，若想将类数组的 arguments 对象当做数组来使用，那么你首先需要对其进行转换。
     {
+
         function makeArray(arrayLike) {
             // 手动创建了一个 result 数组
             var result = [];
@@ -80,9 +92,12 @@
             var args = makeArray(arguments);
             // 使用 args
         }
+
     }
+
     // 开发者最终发现他们可以调用数组原生的 slice() 方法来减少代码量。
     {
+
         function makeArray(arrayLike) {
             // 调用 Array.prototype.slice.call(arrayLike) 并没有明确体现出“要将类数组对象转换为数组”的目的。
             return Array.prototype.slice.call(arrayLike);
@@ -92,7 +107,9 @@
             var args = makeArray(arguments);
             // 使用 args
         }
+
     }
+
     // ES6 新增了 Array.from() 方法来提供一种明确清晰的方式以解决这方面的需求。
     // 将可迭代对象或者类数组对象作为第一个参数传入， Array.from() 就能返回一个数组。
     {

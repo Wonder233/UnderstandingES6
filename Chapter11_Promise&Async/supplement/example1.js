@@ -1,14 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title></title>
-</head>
-<body>
-</body>
-<script src="../tools.js"></script>
-<script>
-
     /**
      * 1. 最简单的Promise例子：生成一个0-2之间的随机数，如果小于1，则等待一段时间后返回成功，否则返回失败：
      */
@@ -19,16 +8,16 @@
      * @param reject 执行失败,调用回调函数 reject
      */
 //    function test(resolve1, reject1) {
-//        log('start new Promise...');
+//        console.log('start new Promise...');
 //        var timeOut = Math.random() * 2;
-//        log('set timeout to: ' + timeOut + ' seconds.');
+//        console.log('set timeout to: ' + timeOut + ' seconds.');
 //        setTimeout(function () {
 //            if (timeOut < 1) {
-//                log('call resolve()...');
+//                console.log('call resolve()...');
 //                resolve1('200 OK');
 //            }
 //            else {
-//                log('call reject()...');
+//                console.log('call reject()...');
 //                reject1('timeout in ' + timeOut + ' seconds.');
 //            }
 //        }, timeOut * 1000);
@@ -37,10 +26,10 @@
 //    var p1 = new Promise(test);
 //    /* p1 执行 test 成功及失败后返回的值仍然是一个 Promise */
 //    var p2 = p1.then(function (result) {
-//        console.log('成功：' + result);
+//        console.console.log('成功：' + result);
 //    });
 //    var p3 = p2.catch(function (reason) {
-//        console.log('失败：' + reason);
+//        console.console.log('失败：' + reason);
 //    });
 
 
@@ -50,7 +39,7 @@
     // 0.5秒后返回input*input的计算结果:
     function multiply(input) {
         return new Promise(function (resolve, reject) {
-            log('calculating ' + input + ' x ' + input + '...');
+            console.log('calculating ' + input + ' x ' + input + '...');
             setTimeout(resolve, 500, input * input);
         });
     }
@@ -58,13 +47,13 @@
     // 0.5秒后返回input+input的计算结果:
     function add(input) {
         return new Promise(function (resolve, reject) {
-            log('calculating ' + input + ' + ' + input + '...');
+            console.log('calculating ' + input + ' + ' + input + '...');
             setTimeout(resolve, 500, input + input);
         });
     }
 
     var p = new Promise(function (resolve, reject) {
-        log('start new Promise...');
+        console.log('start new Promise...');
         resolve(123);
     });
 
@@ -73,7 +62,5 @@
             .then(multiply)
             .then(add)
             .then(function (result) {
-                log('Got value: ' + result);
+                console.log('Got value: ' + result);
             });
-</script>
-</html>

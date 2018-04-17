@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>Set与Map(1)</title>
+  <link href="../style.css" rel="stylesheet">
+  <script src="../tools.js"></script>
+</head>
+
+<body>
+  <h1>Set与Map(1)</h1>
+  <ol>
+    <li>Set 是不包含重复值的列表。
+      <ul>
+        <li>常见的操作是在 Set 中检查某个值是否存在。</li>
+      </ul>
+    </li>
+    <li>Map 则是键与相对应的值的集合。
+      <ul>
+        <li>Map 中的每个项都存储了两块数据，通过指定所需读取的键即可检索对应的值。</li>
+        <li>Map 常被用作缓存，存储数据以便此后快速检索（提取数据。</li>
+      </ul>
+    </li>
+  </ol>
+</body>
+
+<script>
+  group("1. ES5 中的 Set 与 Map");
+
+  // 在 ES5 中，使用对象属性来模拟 Set
+  {
+
+    let set = Object.create(null);
+
+    // 使用对象的属性来检测唯一性，在 ES5 中是很常用的方法。
+
+    // 当一个属性被添加到 set 对象时，它的值也被设为 true
+    set.foo = true;
+
+    // 检查属性的存在性  因此条件判断语句就可以简单判断出该值是否存在。
+    if (set.foo) {
+
+      // 一些操作
+    }
+
+  }
+
+  // 使用对象模拟 Set 与模拟 Map 之间唯一实质区别是所存储的值。
+
+  // 在 ES5 中，使用对象属性来模拟 Map
+  {
+
+    let map = Object.create(null);
+
+    map.foo = "bar";
+
+    // 提取一个值
+    let value = map.foo;
+
+    console.log(value); // "bar"
+
+  }
+
+  groupEnd();
+
+  group("2. 变通方法的问题");
+
+  // 对象属性有 局限性。
+
+  // 1. 对象属性的类型必须为字符串，必须保证任意两个键不能被转换为相同的字符串
+  {
+
+    let map = Object.create(null);
+
+    // 数值类型的键会在内部被转换为字符串
+    map[5] = "foo";
+
+    console.log(map["5"]); // "foo"
+
+  }
+
+  // 2. 使用对象作为键，会出现另一个问题
+  {
+
+    let map = Object.create(null),
+      key1 = {},
+      key2 = {};
+
+    // 由于对象的属性只能是字符串， key1 与 key2 对象就必须被转换为字符串来使用。
+    // 它们会被转换为同一个字符串，也就是对象默认的字符串表示 "[object Object]" ，从而指向同一个属性。
+    map[key1] = "foo";
+
+    console.log(map[key2]); // "foo"
+
+  }
+
+  // 上述问题同样存在于将对象作为 Set 来使用的尝试上。
+
+  // 3. 当键的值为假值时， Map 也会遇到自身的特殊问题。
+  {
+
+    let map = Object.create(null);
+
+    map.count = 1;
+
+    // 是想检查 "count" 属性的存在性，还是想检查非零值？
+    if (map.count) {
+      // ...
+    }
+
+  }
+
+  groupEnd();
+</script>
+
+</html>
